@@ -1,0 +1,36 @@
+{
+  "name": "brackets-jasmine",
+  "version": "0.1.0",
+  "description": "Get inline Jasmine Unit test feedback",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nadchif/brackets-jasmine.git"
+  },
+  "keywords": [
+    "adobe",
+    "brackets",
+    "ide",
+    "extension",
+    "brackets-extension",
+    "javascript",
+    "jasmine",
+    "testing"
+  ],
+  "author": "https://github.com/nadchif",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/nadchif/brackets-jasmine/issues"
+  },
+  "homepage": "https://github.com/nadchif/brackets-jasmine#readme",
+  "devDependencies": {
+    "eslint": "^7.1.0",
+    "eslint-config-google": "^0.14.0"
+  },
+  "dependencies": {
+    "jasmine": "^3.5.0"
+  }
+}
