@@ -15,7 +15,7 @@ maxerr: 50, node: true */
    * @return {object} The test resluts
    */
 
-  const cmdRunTest = (params, callback) => {
+  const cmdRunTests = (params, callback) => {
     // jasmine.loadConfigFile('spec/support/jasmine.json');
     const tempRes = {
       specs: [],
@@ -49,14 +49,14 @@ maxerr: 50, node: true */
    * @param {DomainManager} domainManager The DomainManager for the server
    */
   function init(domainManager) {
-    if (!domainManager.hasDomain('ossejasmine')) {
-      domainManager.registerDomain('ossejasmine', {major: 0, minor: 1});
+    if (!domainManager.hasDomain('bracketsJasmineTests')) {
+      domainManager.registerDomain('bracketsJasmineTests', {major: 0, minor: 1});
     }
 
     domainManager.registerCommand(
-        'ossejasmine', // domain name
+        'bracketsJasmineTests', // domain name
         'runTest', // command name
-        cmdRunTest, // command handler function
+        cmdRunTests, // command handler function
         true, // this command is synchronous in Node
         'Returns the total or free memory on the user\'s system in bytes',
         [
