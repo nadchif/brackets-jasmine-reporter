@@ -26,10 +26,17 @@ define(function(require, exports, module) {
     let i = 1;
     results.specs.forEach((spec)=>{
       i++;
+      let message;
+      if (spec.status == 'passed') {
+        message = `✅ - ${spec.description}`;
+      } else {
+        const details = spec.failedExpectations[0].message;
+        message = `❌ - ${spec.description} -- ${details}`;
+      }
       reportData.errors.push({
         pos: {line: i, ch: 1},
-        type: spec.status == 'passed' ? CodeInspection.Type.META : CodeInspection.Type.ERROR,
-        message: `${spec.status == 'passed' ? '[PASS]' : '[FAIL]'} ${spec.description}`
+        type: CodeInspection.Type.META,
+        message
       });
     });
     return reportData;

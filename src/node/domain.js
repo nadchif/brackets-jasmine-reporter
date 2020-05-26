@@ -20,7 +20,8 @@ maxerr: 50, node: true */
       suites: [],
       params
     };
-    const jsonReporter = {
+    // jasmine.loadConfigFile(params.config);
+    jasmine.addReporter({
       jasmineStarted: function(suiteInfo) {
         tempRes['start_info'] = suiteInfo;
       },
@@ -35,9 +36,7 @@ maxerr: 50, node: true */
       jasmineDone: function(result) {
         tempRes['end_info'] = result;
       }
-    };
-    // jasmine.loadConfigFile(params.config);
-    jasmine.addReporter(jsonReporter);
+    });
     jasmine.randomizeTests(false);
     jasmine.onComplete(() => callback(null, tempRes));
     jasmine.execute([params.file]);
