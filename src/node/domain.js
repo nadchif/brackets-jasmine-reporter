@@ -55,7 +55,7 @@ maxerr: 50, node: true */
 
     domainManager.registerCommand(
         'bracketsJasmineTests', // domain name
-        'runTest', // command name
+        'runTests', // command name
         cmdRunTests, // command handler function
         true, // this command is synchronous in Node
         'Returns the total or free memory on the user\'s system in bytes',
