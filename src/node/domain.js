@@ -6,20 +6,19 @@ maxerr: 50, node: true */
   'use strict';
 
   const Jasmine = require('jasmine');
-
   const jasmine = new Jasmine();
   /**
    * @private
    * Handler function for the Run Test command
-   * @param {object} params the Jasmine spec file
-   * @return {object} The test resluts
+   * @param {Object<string, string>} params the Jasmine spec file
+   * @param {Function} callback
+   * @return {void} The test resluts
    */
-
   const cmdRunTests = (params, callback) => {
-    // jasmine.loadConfigFile('spec/support/jasmine.json');
     const tempRes = {
       specs: [],
-      suites: []
+      suites: [],
+      params
     };
     const jsonReporter = {
       jasmineStarted: function(suiteInfo) {
@@ -35,12 +34,12 @@ maxerr: 50, node: true */
 
       jasmineDone: function(result) {
         tempRes['end_info'] = result;
-        callback(null, tempRes);
       }
     };
-
+    // jasmine.loadConfigFile(params.config);
     jasmine.addReporter(jsonReporter);
-
+    jasmine.randomizeTests(false);
+    jasmine.onComplete(() => callback(null, tempRes));
     jasmine.execute([params.file]);
   };
 
@@ -58,11 +57,11 @@ maxerr: 50, node: true */
         'runTests', // command name
         cmdRunTests, // command handler function
         true, // this command is synchronous in Node
-        'Returns the total or free memory on the user\'s system in bytes',
+        'Returns the test results from Jasmine',
         [
           {
             name: 'params', // parameters
-            type: 'object',
+            type: 'Object',
             description: 'the object with spec file, jasmine.json path, callback'
           }
         ],

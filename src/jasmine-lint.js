@@ -2,6 +2,7 @@
 /* global define, brackets, console, $*/
 define(function(require, exports, module) {
   'use strict';
+  const AppInit = brackets.getModule('utils/AppInit');
   const CodeInspection = brackets.getModule('language/CodeInspection');
   const ExtensionUtils = brackets.getModule('utils/ExtensionUtils');
   const NodeDomain = brackets.getModule('utils/NodeDomain');
@@ -19,19 +20,19 @@ define(function(require, exports, module) {
 
   const generateReport = (results) => {
     console.log(results);
-    const report = {
+    const reportData = {
       errors: []
     };
     let i = 1;
     results.specs.forEach((spec)=>{
       i++;
-      report.errors.push({
+      reportData.errors.push({
         pos: {line: i, ch: 1},
         type: spec.status == 'passed' ? CodeInspection.Type.META : CodeInspection.Type.ERROR,
-        message: spec.description
+        message: `${spec.status == 'passed' ? '[PASS]' : '[FAIL]'} ${spec.description}`
       });
     });
-    return {errors: []};
+    return reportData;
   };
 
   const handleProjectOpen = (evt, projectRoot) => {
@@ -42,34 +43,37 @@ define(function(require, exports, module) {
   };
 
   const handleLinterAsync = (text, filePath) => {
-    const deferred = $.Deferred();
-    // if theres no jasmine config within the project /spec/support/jasmine.json
-    //                   or
-    // if the file does not match jasmine spec regex pattern.
+    const deferred = new $.Deferred();
     if (!hasJasmineConfig || !matchesSpecPattern(filePath)) {
+      console.log('[JasmineTests] ignoring...', filePath);
       deferred.resolve({errors: []});
       return deferred.promise();
     }
-
-    bracketsJasmineDomain.exec('runTests', {file: filePath, config: configFilePath})
-        .then((result) => {
+    console.log('[JasmineTests] testing...', filePath);
+    const params = {file: filePath, config: configFilePath};
+    bracketsJasmineDomain.exec('runTests', params)
+        .then(function(result) {
           const report = generateReport(result);
-          const w = window;
-          if (w.bracketsInspectionGutters) {
-            w.bracketsInspectionGutters.set(
-                EXTENSION_UNIQUE_NAME, filePath, report, true
-            );
-          } else {
-            log.error(`No bracketsInspectionGutters found on window, gutters disabled.`);
+          try {
+            if (window.bracketsInspectionGutters) {
+              window.bracketsInspectionGutters.set(
+                  EXTENSION_UNIQUE_NAME, filePath, report, true
+              );
+            } else {
+              log.error(`No bracketsInspectionGutters found on window, gutters disabled.`);
+            }
+          } catch (e) {
+            console.error(log(e));
           }
           deferred.resolve(report);
-        }, (err) => deferred.reject(err));
+        }, function(err) {
+          deferred.reject(err);
+        });
     return deferred.promise();
   };
 
   const matchesSpecPattern = (filename) => {
     // @todo load the project config jasmine.json and determine patten match from there
-    console.log('test pattern', filename);
     return (filename.toLowerCase().endsWith('spec.js'));
   };
 
@@ -85,15 +89,19 @@ define(function(require, exports, module) {
         });
   };
   module.exports = () => {
-    // listen for changes in current project
-    ProjectManager.on('projectOpen', handleProjectOpen);
-    ProjectManager.on('projectRefresh', handleProjectOpen);
-    // check if open project has config file
-    resolveConfigFile(ProjectManager.getProjectRoot().fullPath);
     // register linter
     CodeInspection.register('javascript', {
       name: 'JasmineTests',
       scanFileAsync: handleLinterAsync
+    });
+
+    AppInit.appReady(function() {
+    // check if open project has config file
+      resolveConfigFile(ProjectManager.getProjectRoot().fullPath);
+      // listen for changes in current project
+
+      ProjectManager.on('projectOpen', handleProjectOpen);
+      ProjectManager.on('projectRefresh', handleProjectOpen);
     });
   };
 });
