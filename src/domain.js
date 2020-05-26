@@ -7,6 +7,7 @@ maxerr: 50, node: true */
 
   const Jasmine = require('jasmine');
 
+  const jasmine = new Jasmine();
   /**
    * @private
    * Handler function for the Run Test command
@@ -15,7 +16,6 @@ maxerr: 50, node: true */
    */
 
   const cmdRunTest = (params, callback) => {
-    const jasmine = new Jasmine();
     // jasmine.loadConfigFile('spec/support/jasmine.json');
     const tempRes = {
       specs: [],
@@ -25,17 +25,6 @@ maxerr: 50, node: true */
       jasmineStarted: function(suiteInfo) {
         tempRes['start_info'] = suiteInfo;
       },
-      /*
-      suiteStarted: function(result) {
-        tempRes['suite_started'] = ('Suite started: ' + result.description +
-          ' whose full description is: ' + result.fullName);
-      },
-
-      specStarted: function(result) {
-        tempRes['spec_started'] = ('Spec started: ' + result.description +
-          ' whose full description is: ' + result.fullName);
-      },
-      */
       specDone: function(result) {
         tempRes.specs.push(result);
       },
@@ -46,7 +35,7 @@ maxerr: 50, node: true */
 
       jasmineDone: function(result) {
         tempRes['end_info'] = result;
-        return callback(null, tempRes);
+        callback(null, tempRes);
       }
     };
 
@@ -77,9 +66,7 @@ maxerr: 50, node: true */
             description: 'the object with spec file, jasmine.json path, callback'
           }
         ],
-        function(err, results) {
-
-        }
+        []
     );
   }
   exports.init = init;
