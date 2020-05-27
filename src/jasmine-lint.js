@@ -64,6 +64,7 @@ define(function(require, exports, module) {
 
     StatusBar.showBusyIndicator(false);
     isWorking = true;
+    setStatusIndicators('Running');
     bracketsJasmineDomain.exec('runTests', params)
         .then(function(result) {
           const report = generateReport(result);
@@ -80,9 +81,13 @@ define(function(require, exports, module) {
           }
 
           isWorking = false;
+
+          setStatusIndicators('Passed');
           StatusBar.hideBusyIndicator();
           deferred.resolve(report);
         }, function(err) {
+
+          setStatusIndicators('Unknown');
           console.error('testtttt', err);
           isWorking = false;
           StatusBar.hideBusyIndicator();
@@ -101,9 +106,7 @@ define(function(require, exports, module) {
     StatusBar.updateIndicator('jasmineTestsRunning', false);
     StatusBar.updateIndicator('jasmineTestsSuccess', false);
     StatusBar.updateIndicator('jasmineTestsUnknown', false);
-
-    StatusBar.updateIndicator('jasmineTestsFailed', true);
-
+    StatusBar.updateIndicator(`jasmineTests${status}`, true);
   };
   const resolveConfigFile = (projectPath) => {
     FileSystem.resolve(`${projectPath}/spec/support/jasmine.json`,
@@ -122,10 +125,10 @@ define(function(require, exports, module) {
       name: 'JasmineTests',
       scanFileAsync: handleLinterAsync
     });
-    StatusBar.addIndicator('jasmineTestsFailed', $('<div>❌ &nbsp; &nbsp; JasmineTests [Failed]</div>'), true, '', 'Status: failed');
-    StatusBar.addIndicator('jasmineTestsPassed', $('<div>✅ &nbsp; &nbsp; JasmineTests [Passed]</div>'), true, '', 'Status: passed');
-    StatusBar.addIndicator('jasmineTestsRunning', $('<div>&nbsp; &nbsp; &nbsp; JasmineTests [Running...]</div>'), true, '', 'Status: running');
-    StatusBar.addIndicator('jasmineTestsUnknown', $('<div>&nbsp; &nbsp; &nbsp; JasmineTests [Unkonw]</div>'), true, '', 'Status: unknown');
+    StatusBar.addIndicator('jasmineTestsFailed', $('<div>❌ &nbsp; &nbsp; JasmineTests [Failed]</div>'), false, '', 'Status: failed');
+    StatusBar.addIndicator('jasmineTestsPassed', $('<div>✅ &nbsp; &nbsp; JasmineTests [Passed]</div>'), false, '', 'Status: passed');
+    StatusBar.addIndicator('jasmineTestsRunning', $('<div>&nbsp; &nbsp; &nbsp; JasmineTests [Running...]</div>'), false, '', 'Status: running');
+    StatusBar.addIndicator('jasmineTestsUnknown', $('<div>&nbsp; &nbsp; &nbsp; JasmineTests [Unknown]</div>'), false, '', 'Status: unknown');
     AppInit.appReady(function() {
     // check if open project has config file
       resolveConfigFile(ProjectManager.getProjectRoot().fullPath);
