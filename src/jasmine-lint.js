@@ -8,8 +8,8 @@ define(function(require, exports, module) {
   const NodeDomain = brackets.getModule('utils/NodeDomain');
   const FileSystem = brackets.getModule('filesystem/FileSystem');
   const ProjectManager = brackets.getModule('project/ProjectManager');
-  const StatusBar = brackets.getModule("widgets/StatusBar");
-
+  const StatusBar = brackets.getModule('widgets/StatusBar');
+  const path = ExtensionUtils.getModulePath(module);
   const EXTENSION_UNIQUE_NAME = 'nadchif.BracketsJasmine';
   let hasJasmineConfig = false;
   let configFilePath;
@@ -51,15 +51,19 @@ define(function(require, exports, module) {
     resolveConfigFile(projectRoot.fullPath);
   };
 
+  let isWorking = false;
   const handleLinterAsync = (text, filePath) => {
     const deferred = new $.Deferred();
-    if (!hasJasmineConfig || !matchesSpecPattern(filePath)) {
+    if (!hasJasmineConfig || !matchesSpecPattern(filePath) || isWorking) {
       console.log('[JasmineTests] ignoring...', filePath);
       deferred.resolve({errors: []});
       return deferred.promise();
     }
     console.log('[JasmineTests] testing...', filePath);
     const params = {file: filePath, config: configFilePath};
+
+    StatusBar.showBusyIndicator(false);
+    isWorking = true;
     bracketsJasmineDomain.exec('runTests', params)
         .then(function(result) {
           const report = generateReport(result);
@@ -75,15 +79,16 @@ define(function(require, exports, module) {
             console.error(log(e));
           }
 
+          isWorking = false;
           StatusBar.hideBusyIndicator();
           deferred.resolve(report);
         }, function(err) {
-
+          console.error('testtttt', err);
+          isWorking = false;
           StatusBar.hideBusyIndicator();
           deferred.reject(err);
         });
 
-        StatusBar.showBusyIndicator(false);
     return deferred.promise();
   };
 
@@ -109,7 +114,10 @@ define(function(require, exports, module) {
       name: 'JasmineTests',
       scanFileAsync: handleLinterAsync
     });
-
+    StatusBar.addIndicator('jasmineTestsFailed', $('<div>❌ &nbsp; &nbsp; JasmineTests [Failed]</div>'), true, '', 'Status: failed');
+    StatusBar.addIndicator('jasmineTestsPassed', $('<div>✅ &nbsp; &nbsp; JasmineTests [Passed]</div>'), true, '', 'Status: passed');
+    StatusBar.addIndicator('jasmineTestsRunning', $('<div>&nbsp; &nbsp; &nbsp; JasmineTests [Running...]</div>'), true, '', 'Status: running');
+    StatusBar.addIndicator('jasmineTestsUnkown', $('<div>&nbsp; &nbsp; &nbsp; JasmineTests [Unkonw]</div>'), true, '', 'Status: unknown');
     AppInit.appReady(function() {
     // check if open project has config file
       resolveConfigFile(ProjectManager.getProjectRoot().fullPath);
