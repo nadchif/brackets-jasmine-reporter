@@ -8,6 +8,7 @@ define(function(require, exports, module) {
   const NodeDomain = brackets.getModule('utils/NodeDomain');
   const FileSystem = brackets.getModule('filesystem/FileSystem');
   const ProjectManager = brackets.getModule('project/ProjectManager');
+  const StatusBar = brackets.getModule("widgets/StatusBar");
 
   const EXTENSION_UNIQUE_NAME = 'nadchif.BracketsJasmine';
   let hasJasmineConfig = false;
@@ -44,6 +45,7 @@ define(function(require, exports, module) {
 
   const handleProjectOpen = (evt, projectRoot) => {
     // immediately set hasJasmineConfig to false
+    console.log('refreshed', projectRoot.fullPath);
     hasJasmineConfig = false;
     // check if the project path contains /spec/support/jasmine.json
     resolveConfigFile(projectRoot.fullPath);
@@ -72,10 +74,16 @@ define(function(require, exports, module) {
           } catch (e) {
             console.error(log(e));
           }
+
+          StatusBar.hideBusyIndicator();
           deferred.resolve(report);
         }, function(err) {
+
+          StatusBar.hideBusyIndicator();
           deferred.reject(err);
         });
+
+        StatusBar.showBusyIndicator(false);
     return deferred.promise();
   };
 

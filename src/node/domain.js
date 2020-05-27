@@ -38,7 +38,10 @@ maxerr: 50, node: true */
       }
     });
     jasmine.randomizeTests(false);
-    jasmine.onComplete(() => callback(null, tempRes));
+    jasmine.onComplete(() => {
+      callback(null, tempRes);
+      
+    });
     jasmine.execute([params.file]);
   };
 
