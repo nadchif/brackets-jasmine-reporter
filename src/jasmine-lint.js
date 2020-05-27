@@ -104,7 +104,7 @@ define(function(require, exports, module) {
   const setStatusIndicators = (status) => {
     StatusBar.updateIndicator('jasmineTestsFailed', false);
     StatusBar.updateIndicator('jasmineTestsRunning', false);
-    StatusBar.updateIndicator('jasmineTestsSuccess', false);
+    StatusBar.updateIndicator('jasmineTestsPassed', false);
     StatusBar.updateIndicator('jasmineTestsUnknown', false);
     StatusBar.updateIndicator(`jasmineTests${status}`, true);
   };
