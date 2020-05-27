@@ -96,7 +96,15 @@ define(function(require, exports, module) {
     // @todo load the project config jasmine.json and determine patten match from there
     return (filename.toLowerCase().endsWith('spec.js'));
   };
+  const setStatusIndicators = (status) => {
+    StatusBar.updateIndicator('jasmineTestsFailed', false);
+    StatusBar.updateIndicator('jasmineTestsRunning', false);
+    StatusBar.updateIndicator('jasmineTestsSuccess', false);
+    StatusBar.updateIndicator('jasmineTestsUnknown', false);
 
+    StatusBar.updateIndicator('jasmineTestsFailed', true);
+
+  };
   const resolveConfigFile = (projectPath) => {
     FileSystem.resolve(`${projectPath}/spec/support/jasmine.json`,
         (err, file)=>{
@@ -117,7 +125,7 @@ define(function(require, exports, module) {
     StatusBar.addIndicator('jasmineTestsFailed', $('<div>❌ &nbsp; &nbsp; JasmineTests [Failed]</div>'), true, '', 'Status: failed');
     StatusBar.addIndicator('jasmineTestsPassed', $('<div>✅ &nbsp; &nbsp; JasmineTests [Passed]</div>'), true, '', 'Status: passed');
     StatusBar.addIndicator('jasmineTestsRunning', $('<div>&nbsp; &nbsp; &nbsp; JasmineTests [Running...]</div>'), true, '', 'Status: running');
-    StatusBar.addIndicator('jasmineTestsUnkown', $('<div>&nbsp; &nbsp; &nbsp; JasmineTests [Unkonw]</div>'), true, '', 'Status: unknown');
+    StatusBar.addIndicator('jasmineTestsUnknown', $('<div>&nbsp; &nbsp; &nbsp; JasmineTests [Unkonw]</div>'), true, '', 'Status: unknown');
     AppInit.appReady(function() {
     // check if open project has config file
       resolveConfigFile(ProjectManager.getProjectRoot().fullPath);
