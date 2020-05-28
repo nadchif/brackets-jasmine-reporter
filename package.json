@@ -1,6 +1,6 @@
 {
   "name": "brackets-jasmine-reporter",
-  "title": "Brackets Jasmine Tests Reporter",
+  "title": "Brackets Jasmine Reporter",
   "version": "0.1.0",
   "description": "Get inline Jasmine Unit test feedback within Brackets IDE",
   "main": "main.js",
