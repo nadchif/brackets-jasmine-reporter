@@ -121,24 +121,27 @@ define(function(require, exports, module) {
   const generateReport = (rawResult, fileName, text) => {
     lintedCodeLines = text.split('\n');
     let results;
-    try {
-      results = (JSON.parse(rawResult.split('---JASMINERESULT---')[1]));
-    } catch (e) {
-      console.error('Failed to parse', rawResult);
-      return {
-        errors: [{
-          pos: {line: 0, ch: 1},
-          type: CodeInspection.Type.WARNING,
-          message: 'Jasmine ran, but the extension could not parse the result'
-        }]
-      };
-    }
     const reportData = {
       errors: []
     };
     const gutterReportData = {
       errors: []
     };
+
+    try {
+      results = (JSON.parse(rawResult.split('---JASMINERESULT---')[1]));
+    } catch (e) {
+      console.error('Failed to parse', rawResult);
+      const failureMessage = {
+        pos: {line: 0, ch: 1},
+        type: CodeInspection.Type.WARNING,
+        message: 'Extension Failed to parse Jasmine results'
+      };
+      reportData.errors.push(failureMessage);
+
+      return {reportData, gutterReportData};
+    }
+
     results.specs.forEach((spec) => {
       let message;
       if (spec.status == 'passed') {
