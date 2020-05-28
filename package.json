@@ -1,12 +1,13 @@
 {
-  "name": "brackets-jasmine",
+  "name": "brackets-jasmine-reporter",
+  "title": "Brackets Jasmine Tests Reporter",
   "version": "0.1.0",
-  "description": "Get inline Jasmine Unit test feedback",
+  "description": "Get inline Jasmine Unit test feedback within Brackets IDE",
   "main": "main.js",
   "scripts": {
     "test": "./node_modules/.bin/eslint ./src/main.js ./src/*  && ./node_modules/.bin/jasmine --random=false",
     "lintfix": "./node_modules/.bin/eslint --fix ./src/main.js ./src/* ./spec/*.js",
-    "zip": "npm run-script build && ./node_modules/.bin/bestzip encode-decode.zip lib/* convertors/* main.js requirejs-config.json package.json",
+    "zip": "npm run-script build && ./node_modules/.bin/bestzip brackets-jasmine.zip lib/* convertors/* main.js requirejs-config.json package.json",
     "build": "./node_modules/.bin/eslint ./src/* && ./node_modules/.bin/babel src -d ./dist/",
     "fastbuild": "./node_modules/.bin/babel src -d ."
   },
@@ -34,6 +35,7 @@
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.6",
     "@babel/preset-env": "^7.9.6",
+    "amd-loader": "0.0.8",
     "bestzip": "^2.1.5",
     "eslint": "^7.1.0",
     "eslint-config-google": "^0.14.0"
