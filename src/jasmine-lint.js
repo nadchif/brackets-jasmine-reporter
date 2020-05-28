@@ -23,7 +23,7 @@ define(function(require, exports, module) {
 
   const ddMethod = new DropdownButton.DropdownButton('OFF', 'JasmineTests');
   ddMethod.on('select', function(event, item, itemIndex) {
- alert(itemIndex);
+    alert(itemIndex);
   });
   const statusIndicators = {
     Failed: ' ❌ - Failed',
@@ -37,7 +37,7 @@ define(function(require, exports, module) {
     const reportData = {
       errors: []
     };
-    //overall report
+    // overall report
     const overallResult = results.end_Info.overallStatus == 'passed'? 'Passed' : 'Failed';
     setStatusIndicators(overallResult);
     let i = 1;
@@ -72,6 +72,8 @@ define(function(require, exports, module) {
     const deferred = new $.Deferred();
     if (!hasJasmineConfig || !matchesSpecPattern(filePath) || isWorking) {
       console.log('[JasmineTests] ignoring...', filePath);
+      isWorking = false;
+      setStatusIndicators('Unknown');
       deferred.resolve({errors: []});
       return deferred.promise();
     }
@@ -141,7 +143,7 @@ define(function(require, exports, module) {
     });
 
     StatusBar.addIndicator('jasmineTestsStatus', ddMethod.$button, true,
-     'btn btn-dropdown btn-status-bar', 'Jasmine Tests', 'status-overwrite');
+        'btn btn-dropdown btn-status-bar', 'Jasmine Tests', 'status-overwrite');
 
     AppInit.appReady(function() {
       ProjectManager.on('projectOpen', handleProjectOpen);
