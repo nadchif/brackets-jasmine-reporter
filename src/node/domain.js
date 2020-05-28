@@ -40,9 +40,12 @@ maxerr: 50, node: true */
     jasmine.randomizeTests(false);
     jasmine.onComplete(() => {
       callback(null, tempRes);
-      
     });
-    jasmine.execute([params.file]);
+    try {
+      jasmine.execute([params.file]);
+    } catch (e) {
+      callback('jasmine execution error');
+    }
   };
 
   /**

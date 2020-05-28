@@ -2,15 +2,7 @@
 /* global define, brackets, console, $*/
 define(function(require, exports, module) {
   'use strict';
-  const AppInit = brackets.getModule('utils/AppInit');
-  const CodeInspection = brackets.getModule('language/CodeInspection');
-  const ExtensionUtils = brackets.getModule('utils/ExtensionUtils');
-  const NodeDomain = brackets.getModule('utils/NodeDomain');
-  const FileSystem = brackets.getModule('filesystem/FileSystem');
-  const ProjectManager = brackets.getModule('project/ProjectManager');
-  const StatusBar = brackets.getModule('widgets/StatusBar');
 
-  const DropdownButton = brackets.getModule('widgets/DropdownButton');
   const EXTENSION_UNIQUE_NAME = 'nadchif.BracketsJasmine';
   let hasJasmineConfig = false;
   let configFilePath;
@@ -21,34 +13,33 @@ define(function(require, exports, module) {
   );
 
 
-  const ddMethod = new DropdownButton.DropdownButton('OFF', 'JasmineTests');
+  const ddMethod = new DropdownButton.DropdownButton('Jasmine Tests', [' Run Tests', 'Enable/Disable']);
   ddMethod.on('select', function(event, item, itemIndex) {
-    alert(itemIndex);
+    switch (itemIndex) {
+      case 1:
+        hasJasmineConfig = !hasJasmineConfig;
+        updateStatus();
+        break;
+      case 0:
+        CodeInspection.requestRun();
+        break;
+    }
   });
-  const statusIndicators = {
-    Failed: ' ❌ - Failed',
-    Passed: ' ✅ - Passed',
-    Running: ' Running...',
-    Unknown: ' Unknown'
-  };
 
   const generateReport = (results) => {
-    console.log(results);
+    console.log('results', results);
     const reportData = {
       errors: []
     };
-    // overall report
-    const overallResult = results.end_Info.overallStatus == 'passed'? 'Passed' : 'Failed';
-    setStatusIndicators(overallResult);
     let i = 1;
     results.specs.forEach((spec)=>{
       i++;
       let message;
       if (spec.status == 'passed') {
-        message = `✅ - ${spec.description}`;
+        message = `✅‏‏‎  ${spec.fullName}`;
       } else {
         const details = spec.failedExpectations[0].message;
-        message = `❌ - ${spec.description} -- ${details}`;
+        message = `❌  ${spec.fullName} -- ${details}`;
       }
       reportData.errors.push({
         pos: {line: i, ch: 1},
@@ -63,17 +54,19 @@ define(function(require, exports, module) {
     // immediately set hasJasmineConfig to false
     console.log('refreshed', projectRoot.fullPath);
     hasJasmineConfig = false;
+    isWorking = false;
     // check if the project path contains /spec/support/jasmine.json
     resolveConfigFile(projectRoot.fullPath);
   };
 
   let isWorking = false;
+  let isReattemptRun = false;
   const handleLinterAsync = (text, filePath) => {
     const deferred = new $.Deferred();
     if (!hasJasmineConfig || !matchesSpecPattern(filePath) || isWorking) {
       console.log('[JasmineTests] ignoring...', filePath);
       isWorking = false;
-      setStatusIndicators('Unknown');
+      updateStatus();
       deferred.resolve({errors: []});
       return deferred.promise();
     }
@@ -82,9 +75,13 @@ define(function(require, exports, module) {
 
     StatusBar.showBusyIndicator(false);
     isWorking = true;
-    setStatusIndicators('Running');
+    updateStatus();
     bracketsJasmineDomain.exec('runTests', params)
         .then(function(result) {
+          isWorking = false;
+          updateStatus();
+          StatusBar.hideBusyIndicator();
+
           const report = generateReport(result);
           try {
             if (window.bracketsInspectionGutters) {
@@ -97,15 +94,20 @@ define(function(require, exports, module) {
           } catch (e) {
             console.error(log(e));
           }
-
-          isWorking = false;
-          StatusBar.hideBusyIndicator();
+          isReattemptRun = false;
           deferred.resolve(report);
         }, function(err) {
-          setStatusIndicators('Unknown');
-          console.error('testtttt', err);
           isWorking = false;
           StatusBar.hideBusyIndicator();
+          updateStatus();
+          if (!isReattemptRun) {
+            deferred.resolve({errors: []});
+            setTimeout(()=>CodeInspection.requestRun(), 1000);
+            isReattemptRun = true;
+            return;
+          } else {
+            isReattemptRun = false;
+          }
           deferred.reject(err);
         });
 
@@ -117,21 +119,20 @@ define(function(require, exports, module) {
     return (filename.toLowerCase().endsWith('spec.js'));
   };
 
-
-  const setStatusIndicators = (status) => {
-    ddMethod.$button.text(`JasmineTests: ${statusIndicators[status]}`);
+  const updateStatus = () => {
+    const status = hasJasmineConfig ? isWorking ? '⚪ Running...' : '🔵 Enabled' : '🔴 Disabled';
+    ddMethod.$button.text(`Jasmine: ${status}`);
   };
   const resolveConfigFile = (projectPath) => {
     FileSystem.resolve(`${projectPath}/spec/support/jasmine.json`,
         (err, file)=>{
           if (err) {
-            hasJasmineConfig = true;
-            StatusBar.updateIndicator('false', true);
-            return;
+            hasJasmineConfig = false;
+            updateStatus();
           } else {
             configFilePath = `${projectPath}/spec/support/jasmine.json`;
             hasJasmineConfig = true;
-            StatusBar.updateIndicator('jasmineTestsStatus', true);
+            updateStatus();
           }
         });
   };
@@ -144,6 +145,7 @@ define(function(require, exports, module) {
 
     StatusBar.addIndicator('jasmineTestsStatus', ddMethod.$button, true,
         'btn btn-dropdown btn-status-bar', 'Jasmine Tests', 'status-overwrite');
+    updateStatus();
 
     AppInit.appReady(function() {
       ProjectManager.on('projectOpen', handleProjectOpen);
