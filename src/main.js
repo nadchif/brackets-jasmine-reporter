@@ -257,7 +257,7 @@ define(function(require, exports, module) {
               {
                 pos: {line: 0, ch: 1},
                 type: CodeInspection.Type.WARNING,
-                message: err
+                message: `[Jasmine error occurred] ${err}`
               }
             ]});
           }
@@ -281,9 +281,14 @@ define(function(require, exports, module) {
         '⚪ Running...' :
         '🔵 Enabled' :
       '🔴 Disabled';
+    /*
+    Hangs PC:
+
     isWorking ?
       StatusBar.showBusyIndicator(false) :
       StatusBar.hideBusyIndicator();
+
+      */
     statusDropDownBtn.$button.text(`Jasmine: ${status}`);
   };
   const resolveConfigFile = (projectPath, triggerInspection) => {
