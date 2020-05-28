@@ -187,8 +187,9 @@ define(function(require, exports, module) {
       return def.promise();
     }
     console.log(`[JasmineTests] ${isReattemptRun ? 'Reattempting Test' : 'Testing'}...`, filePath);
-    const params = {file: filePath, config: configFilePath}; cd;
 
+    const params = {file: filePath, config: configFilePath};
+    
     // StatusBar.showBusyIndicator(false);
     isWorking = true;
     updateStatus();
