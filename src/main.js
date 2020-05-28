@@ -37,9 +37,8 @@ define(function(require, exports, module) {
 
   const extractLine = (spec, fileName) => {
     if (spec.status == 'passed') {
-      const reg = 'it\\((?:\'|")('+spec.description+')(?:\'|")';
+      const reg = 'it([ ]{0,1})\\([ ]{0,1}(?:\'|")('+spec.description+')(?:\'|")';
       const lineMatcher = new RegExp(reg, 'g');
-      console.log(lineMatcher);
       let lineNo = 0;
       for (let i = 0; i < activeText.length; i++) {
         const stackString = activeText[i];
