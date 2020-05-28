@@ -82,7 +82,8 @@ define(function(require, exports, module) {
    */
   const extractLine = (spec, fileName) => {
     if (spec.status == 'passed') {
-      const reg = 'it([ ]{0,1})\\([ ]{0,1}(?:\'|")('+spec.description+')(?:\'|")';
+      const reg =
+        'it([ ]{0,1})\\([ ]{0,1}(?:\'|")(' + spec.description + ')(?:\'|")';
       const lineMatcher = new RegExp(reg, 'g');
       let lineNo = 0;
       for (let i = 0; i < lintedCodeLines.length; i++) {
@@ -91,19 +92,19 @@ define(function(require, exports, module) {
         if (fileTroubleLine) {
           lineNo = i;
           break;
-        };
+        }
       }
       return lineNo;
     }
-    const reg = fileName+':([0-9]+)';
+    const reg = fileName + ':([0-9]+)';
     const lineMatcher = new RegExp(reg, 'g');
     const stackString = spec.failedExpectations[0].stack;
     const fileTroubleLine = stackString.match(lineMatcher);
     if (fileTroubleLine) {
       const parts = fileTroubleLine[0].split(':');
-      const line = parseInt(parts[parts.length-1]) - 1;
+      const line = parseInt(parts[parts.length - 1]) - 1;
       return line > 0 ? line : 0;
-    };
+    }
     return 0;
   };
 
@@ -142,7 +143,10 @@ define(function(require, exports, module) {
       });
       gutterReportData.errors.push({
         pos: {line: lineNo, ch: 1},
-        type: spec.status == 'passed' ? CodeInspection.Type.META : CodeInspection.Type.ERROR,
+        type:
+          spec.status == 'passed' ?
+            CodeInspection.Type.META :
+            CodeInspection.Type.ERROR,
         message
       });
     });
@@ -174,7 +178,7 @@ define(function(require, exports, module) {
    * @return  {Promise}           a jQuery.Promise
    */
   const handleLinterAsync = (text, filePath) => {
-    const def = $.Deferred();
+    const def = new $.Deferred();
     if (!hasJasmineConfig || !matchesSpecPattern(filePath) || isWorking) {
       console.log('[JasmineTests] ignoring...', filePath);
       isWorking = false;
@@ -188,13 +192,17 @@ define(function(require, exports, module) {
     // StatusBar.showBusyIndicator(false);
     isWorking = true;
     updateStatus();
-    bracketsJasmineDomain.exec('runTests', params).done(
-        function(result) {
+    bracketsJasmineDomain
+        .exec('runTests', params)
+        .done(function(result) {
           isWorking = false;
           updateStatus();
           // StatusBar.hideBusyIndicator();
-          const {reportData, gutterReportData} =
-          generateReport(JSON.parse(result), filePath, text);
+          const {reportData, gutterReportData} = generateReport(
+              JSON.parse(result),
+              filePath,
+              text
+          );
           try {
             if (window.bracketsInspectionGutters) {
               window.bracketsInspectionGutters.set(
@@ -204,31 +212,30 @@ define(function(require, exports, module) {
                   true
               );
             } else {
-              log.error(
-                  `No bracketsInspectionGutters found on window`
-              );
+              log.error(`No bracketsInspectionGutters found on window`);
             }
           } catch (e) {
             console.error(log(e));
           }
           isReattemptRun = false;
           def.resolve(reportData);
-        }).fail(function(err) {
-      if (!isReattemptRun) {
-        def.resolve({errors: []});
-        setTimeout(() => CodeInspection.requestRun(), 1500);
-        isReattemptRun = true;
-        isWorking = false;
-        return;
-      } else {
-        isReattemptRun = false;
-        isWorking = false;
-        // StatusBar.hideBusyIndicator();
-        updateStatus();
-      }
-      def.reject(err);
-    }
-    );
+        })
+        .fail(function(err) {
+          if (!isReattemptRun) {
+            isReattemptRun = true;
+            isWorking = false;
+            new Promise((resolve) =>
+              setTimeout(resolve, (Math.random() + 1) * 1000)
+            ).then(() => CodeInspection.requestRun());
+            return;
+          } else {
+            isReattemptRun = false;
+            isWorking = false;
+            // StatusBar.hideBusyIndicator();
+            updateStatus();
+            def.reject(err);
+          }
+        });
     return def.promise();
   };
 
