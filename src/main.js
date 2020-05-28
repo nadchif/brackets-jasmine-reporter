@@ -189,7 +189,7 @@ define(function(require, exports, module) {
     console.log(`[JasmineTests] ${isReattemptRun ? 'Reattempting Test' : 'Testing'}...`, filePath);
 
     const params = {file: filePath, config: configFilePath};
-    
+
     // StatusBar.showBusyIndicator(false);
     isWorking = true;
     updateStatus();
@@ -240,6 +240,11 @@ define(function(require, exports, module) {
     return def.promise();
   };
 
+  /**
+   * Checks if a filename matches the Jasmine spec naming patterns
+   * @param   {String}  filename  filepath and name
+   * @return  {Boolean} true if file pattern matches the spec pattern
+   */
   const matchesSpecPattern = (filename) => {
     // @todo load the project config jasmine.json and determine patten match from there
     return filename.toLowerCase().endsWith('spec.js');
@@ -269,18 +274,17 @@ define(function(require, exports, module) {
     );
   };
 
-  // add the Jasmine Tests button to the status bar
-  StatusBar.addIndicator(
-      'jasmineTestsStatus',
-      statusDropDownBtn.$button,
-      true,
-      'btn btn-dropdown btn-status-bar',
-      'Jasmine Tests',
-      'status-overwrite'
-  );
-  updateStatus();
-
   AppInit.appReady(function() {
+    // add the Jasmine Tests button to the status bar
+    StatusBar.addIndicator(
+        'jasmineTestsStatus',
+        statusDropDownBtn.$button,
+        true,
+        'btn btn-dropdown btn-status-bar',
+        'Jasmine Tests',
+        'status-overwrite'
+    );
+    updateStatus();
     ProjectManager.on('projectOpen', handleProjectOpen);
     ProjectManager.on('projectRefresh', handleProjectOpen);
     resolveConfigFile(ProjectManager.getProjectRoot().fullPath);
