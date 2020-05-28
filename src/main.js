@@ -186,7 +186,7 @@ define(function(require, exports, module) {
       def.resolve({errors: []});
       return def.promise();
     }
-    console.log('[JasmineTests] testing...', filePath);
+    console.log(`[JasmineTests] ${isReattemptRun ? 'Reattempting Test' : 'Testing'}...`, filePath);
     const params = {file: filePath, config: configFilePath};
 
     // StatusBar.showBusyIndicator(false);
@@ -274,6 +274,7 @@ define(function(require, exports, module) {
     scanFileAsync: handleLinterAsync
   });
 
+  // add the Jasmine Tests button to the status bar
   StatusBar.addIndicator(
       'jasmineTestsStatus',
       statusDropDownBtn.$button,
