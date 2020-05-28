@@ -9,39 +9,84 @@ define(function(require, exports, module) {
   const StatusBar = brackets.getModule('widgets/StatusBar');
   const DropdownButton = brackets.getModule('widgets/DropdownButton');
 
+  /**
+   * Unique name of this Brackets extension
+   * @type {String}
+   */
   const EXTENSION_UNIQUE_NAME = 'nadchif.BracketsJasmine';
+  /**
+   * Indicates whether the current workspace/project has a /spec/support/jasmine.json file.
+   * @type {Boolean}
+   */
   let hasJasmineConfig = false;
+  /**
+   * Path to the active jasmine.json config file
+   * @type {String}
+   */
   let configFilePath;
 
+  /**
+   * Array of code lines for the document that was linted
+   * @type {Array}
+   */
+  let lintedCodeLines = [];
+
+  /**
+   * Indicates that Jasmine tests are currently running
+   * @type {Boolean}
+   */
+  let isWorking = false;
+
+  /**
+   * Indicates that tests are running as a reattempt resulting from a possible Node failure
+   * @type {Boolean}
+   */
+  let isReattemptRun = false;
+
+  /**
+   * The Node Domain that we will be using for this extension
+   * @type {NodeDomain}
+   */
   const bracketsJasmineDomain = new NodeDomain(
       'bracketsJasmineTests',
       ExtensionUtils.getModulePath(module, 'node/domain')
   );
-
-  const ddMethod = new DropdownButton.DropdownButton('Jasmine Tests', [
+  /**
+   * The status bar dropdown button that presents the options
+   *  - Run Test
+   *  - Enable/Disable
+   */
+  const statusDropDownBtn = new DropdownButton.DropdownButton('Jasmine Tests', [
     ' Run Tests',
     'Enable/Disable'
   ]);
-  ddMethod.on('select', function(event, item, itemIndex) {
+  statusDropDownBtn.on('select', function(event, item, itemIndex) {
     switch (itemIndex) {
       case 1:
+        // Enable/Disable automatic Jasmine Tests from running on save
         hasJasmineConfig = !hasJasmineConfig;
         updateStatus();
         break;
       case 0:
+        // Request CodeInspection to lint current file, which in turn will trigger JasmineTests to lint
         CodeInspection.requestRun();
         break;
     }
   });
-  let activeText = [];
 
+  /**
+   * Locates the line related to the spec (for error reporting)
+   * @param   {Object<String, String>}  spec      the spec result
+   * @param   {String}  fileName  the fullpath to the file being linted
+   * @return  {Number} the line number
+   */
   const extractLine = (spec, fileName) => {
     if (spec.status == 'passed') {
       const reg = 'it([ ]{0,1})\\([ ]{0,1}(?:\'|")('+spec.description+')(?:\'|")';
       const lineMatcher = new RegExp(reg, 'g');
       let lineNo = 0;
-      for (let i = 0; i < activeText.length; i++) {
-        const stackString = activeText[i];
+      for (let i = 0; i < lintedCodeLines.length; i++) {
+        const stackString = lintedCodeLines[i];
         const fileTroubleLine = stackString.match(lineMatcher);
         if (fileTroubleLine) {
           lineNo = i;
@@ -62,8 +107,17 @@ define(function(require, exports, module) {
     return 0;
   };
 
+  /**
+   * Generates CodeInspection ready reports
+   *
+   * @param   {Object}  results   results object of the file being linted
+   * @param   {String}  fileName  fullpath to the file being linted
+   * @param   {String}  text      The text being linted
+   *
+   * @return  {Object<String, Object>}            [return description]
+   */
   const generateReport = (results, fileName, text) => {
-    activeText = text.split('\n');
+    lintedCodeLines = text.split('\n');
     const reportData = {
       errors: []
     };
@@ -95,7 +149,14 @@ define(function(require, exports, module) {
     return {reportData, gutterReportData};
   };
 
-  const handleProjectOpen = (evt, projectRoot) => {
+  /**
+   * Handles projects opening and refreshing
+   *
+   * @param   {Event}  event          The event
+   * @param   {any}  projectRoot  The active project root
+   * @return  {void}
+   */
+  const handleProjectOpen = (event, projectRoot) => {
     // immediately set hasJasmineConfig to false
     console.log('refreshed', projectRoot.fullPath);
     hasJasmineConfig = false;
@@ -104,16 +165,22 @@ define(function(require, exports, module) {
     resolveConfigFile(projectRoot.fullPath);
   };
 
-  let isWorking = false;
-  let isReattemptRun = false;
+  /**
+   * Handles scanFileAsync calls to lint the current file
+   *
+   * @param   {String}  text      The text of the file going to be linted
+   * @param   {String}  filePath  Full filepath of the file going to be linted
+   *
+   * @return  {Promise}           a jQuery.Promise
+   */
   const handleLinterAsync = (text, filePath) => {
-    const deferred = new $.Deferred();
+    const def = $.Deferred();
     if (!hasJasmineConfig || !matchesSpecPattern(filePath) || isWorking) {
       console.log('[JasmineTests] ignoring...', filePath);
       isWorking = false;
       updateStatus();
-      deferred.resolve({errors: []});
-      return deferred.promise();
+      def.resolve({errors: []});
+      return def.promise();
     }
     console.log('[JasmineTests] testing...', filePath);
     const params = {file: filePath, config: configFilePath};
@@ -145,11 +212,10 @@ define(function(require, exports, module) {
             console.error(log(e));
           }
           isReattemptRun = false;
-          deferred.resolve(reportData);
-          return new $.Deferred().resolve().promise();
+          def.resolve(reportData);
         }).fail(function(err) {
       if (!isReattemptRun) {
-        deferred.resolve({errors: []});
+        def.resolve({errors: []});
         setTimeout(() => CodeInspection.requestRun(), 1500);
         isReattemptRun = true;
         isWorking = true;
@@ -161,11 +227,10 @@ define(function(require, exports, module) {
         // StatusBar.hideBusyIndicator();
         updateStatus();
       }
-      deferred.reject(err);
+      def.reject(err);
     }
     );
-
-    return deferred.promise();
+    return def.promise();
   };
 
   const matchesSpecPattern = (filename) => {
@@ -179,7 +244,7 @@ define(function(require, exports, module) {
         '⚪ Running...' :
         '🔵 Enabled' :
       '🔴 Disabled';
-    ddMethod.$button.text(`Jasmine: ${status}`);
+    statusDropDownBtn.$button.text(`Jasmine: ${status}`);
   };
   const resolveConfigFile = (projectPath) => {
     FileSystem.resolve(
@@ -205,7 +270,7 @@ define(function(require, exports, module) {
 
   StatusBar.addIndicator(
       'jasmineTestsStatus',
-      ddMethod.$button,
+      statusDropDownBtn.$button,
       true,
       'btn btn-dropdown btn-status-bar',
       'Jasmine Tests',
