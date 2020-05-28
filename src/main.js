@@ -194,7 +194,7 @@ define(function(require, exports, module) {
           updateStatus();
           // StatusBar.hideBusyIndicator();
           const {reportData, gutterReportData} =
-          generateReport(result, filePath, text);
+          generateReport(JSON.parse(result), filePath, text);
           try {
             if (window.bracketsInspectionGutters) {
               window.bracketsInspectionGutters.set(
@@ -218,8 +218,7 @@ define(function(require, exports, module) {
         def.resolve({errors: []});
         setTimeout(() => CodeInspection.requestRun(), 1500);
         isReattemptRun = true;
-        isWorking = true;
-        updateStatus();
+        isWorking = false;
         return;
       } else {
         isReattemptRun = false;
