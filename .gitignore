@@ -4,3 +4,5 @@ dist
 brackets-jasmine
 brackets-jasmine.zip
 *.bat
+/node
+/main.js

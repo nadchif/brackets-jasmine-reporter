@@ -4,7 +4,6 @@ maxerr: 50, node: true */
 
 (function() {
   'use strict';
-
   const Jasmine = require('jasmine');
   const jasmine = new Jasmine();
   /**
@@ -39,8 +38,7 @@ maxerr: 50, node: true */
     });
     jasmine.randomizeTests(false);
     jasmine.onComplete(() => {
-      callback(null, tempRes);
-      
+      callback(null, JSON.stringify(tempRes));
     });
     jasmine.execute([params.file]);
   };
@@ -53,7 +51,6 @@ maxerr: 50, node: true */
     if (!domainManager.hasDomain('bracketsJasmineTests')) {
       domainManager.registerDomain('bracketsJasmineTests', {major: 0, minor: 1});
     }
-
     domainManager.registerCommand(
         'bracketsJasmineTests', // domain name
         'runTests', // command name
@@ -67,7 +64,11 @@ maxerr: 50, node: true */
             description: 'the object with spec file, jasmine.json path, callback'
           }
         ],
-        []
+        [{
+          name: 'result',
+          type: 'string',
+          description: 'The result of the execution'
+        }]
     );
   }
   exports.init = init;
