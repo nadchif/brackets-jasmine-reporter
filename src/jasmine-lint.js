@@ -9,7 +9,8 @@ define(function(require, exports, module) {
   const FileSystem = brackets.getModule('filesystem/FileSystem');
   const ProjectManager = brackets.getModule('project/ProjectManager');
   const StatusBar = brackets.getModule('widgets/StatusBar');
-  const path = ExtensionUtils.getModulePath(module);
+
+  const DropdownButton = brackets.getModule('widgets/DropdownButton');
   const EXTENSION_UNIQUE_NAME = 'nadchif.BracketsJasmine';
   let hasJasmineConfig = false;
   let configFilePath;
@@ -19,11 +20,26 @@ define(function(require, exports, module) {
       ExtensionUtils.getModulePath(module, 'node/domain')
   );
 
+
+  const ddMethod = new DropdownButton.DropdownButton('OFF', 'JasmineTests');
+  ddMethod.on('select', function(event, item, itemIndex) {
+ alert(itemIndex);
+  });
+  const statusIndicators = {
+    Failed: ' ❌ - Failed',
+    Passed: ' ✅ - Passed',
+    Running: ' Running...',
+    Unknown: ' Unknown'
+  };
+
   const generateReport = (results) => {
     console.log(results);
     const reportData = {
       errors: []
     };
+    //overall report
+    const overallResult = results.end_Info.overallStatus == 'passed'? 'Passed' : 'Failed';
+    setStatusIndicators(overallResult);
     let i = 1;
     results.specs.forEach((spec)=>{
       i++;
@@ -81,12 +97,9 @@ define(function(require, exports, module) {
           }
 
           isWorking = false;
-
-          setStatusIndicators('Passed');
           StatusBar.hideBusyIndicator();
           deferred.resolve(report);
         }, function(err) {
-
           setStatusIndicators('Unknown');
           console.error('testtttt', err);
           isWorking = false;
@@ -101,21 +114,22 @@ define(function(require, exports, module) {
     // @todo load the project config jasmine.json and determine patten match from there
     return (filename.toLowerCase().endsWith('spec.js'));
   };
+
+
   const setStatusIndicators = (status) => {
-    StatusBar.updateIndicator('jasmineTestsFailed', false);
-    StatusBar.updateIndicator('jasmineTestsRunning', false);
-    StatusBar.updateIndicator('jasmineTestsPassed', false);
-    StatusBar.updateIndicator('jasmineTestsUnknown', false);
-    StatusBar.updateIndicator(`jasmineTests${status}`, true);
+    ddMethod.$button.text(`JasmineTests: ${statusIndicators[status]}`);
   };
   const resolveConfigFile = (projectPath) => {
     FileSystem.resolve(`${projectPath}/spec/support/jasmine.json`,
         (err, file)=>{
           if (err) {
+            hasJasmineConfig = true;
+            StatusBar.updateIndicator('false', true);
             return;
           } else {
             configFilePath = `${projectPath}/spec/support/jasmine.json`;
             hasJasmineConfig = true;
+            StatusBar.updateIndicator('jasmineTestsStatus', true);
           }
         });
   };
@@ -125,17 +139,14 @@ define(function(require, exports, module) {
       name: 'JasmineTests',
       scanFileAsync: handleLinterAsync
     });
-    StatusBar.addIndicator('jasmineTestsFailed', $('<div>❌ &nbsp; &nbsp; JasmineTests [Failed]</div>'), false, '', 'Status: failed');
-    StatusBar.addIndicator('jasmineTestsPassed', $('<div>✅ &nbsp; &nbsp; JasmineTests [Passed]</div>'), false, '', 'Status: passed');
-    StatusBar.addIndicator('jasmineTestsRunning', $('<div>&nbsp; &nbsp; &nbsp; JasmineTests [Running...]</div>'), false, '', 'Status: running');
-    StatusBar.addIndicator('jasmineTestsUnknown', $('<div>&nbsp; &nbsp; &nbsp; JasmineTests [Unknown]</div>'), false, '', 'Status: unknown');
-    AppInit.appReady(function() {
-    // check if open project has config file
-      resolveConfigFile(ProjectManager.getProjectRoot().fullPath);
-      // listen for changes in current project
 
+    StatusBar.addIndicator('jasmineTestsStatus', ddMethod.$button, true,
+     'btn btn-dropdown btn-status-bar', 'Jasmine Tests', 'status-overwrite');
+
+    AppInit.appReady(function() {
       ProjectManager.on('projectOpen', handleProjectOpen);
       ProjectManager.on('projectRefresh', handleProjectOpen);
+      resolveConfigFile(ProjectManager.getProjectRoot().fullPath);
     });
   };
 });
