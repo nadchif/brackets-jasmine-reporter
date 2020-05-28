@@ -187,7 +187,7 @@ define(function(require, exports, module) {
       return def.promise();
     }
     console.log(`[JasmineTests] ${isReattemptRun ? 'Reattempting Test' : 'Testing'}...`, filePath);
-    const params = {file: filePath, config: configFilePath};
+    const params = {file: filePath, config: configFilePath}; cd;
 
     // StatusBar.showBusyIndicator(false);
     isWorking = true;
@@ -268,12 +268,6 @@ define(function(require, exports, module) {
     );
   };
 
-  // register linter
-  CodeInspection.register('javascript', {
-    name: 'JasmineTests',
-    scanFileAsync: handleLinterAsync
-  });
-
   // add the Jasmine Tests button to the status bar
   StatusBar.addIndicator(
       'jasmineTestsStatus',
@@ -289,5 +283,10 @@ define(function(require, exports, module) {
     ProjectManager.on('projectOpen', handleProjectOpen);
     ProjectManager.on('projectRefresh', handleProjectOpen);
     resolveConfigFile(ProjectManager.getProjectRoot().fullPath);
+    // register linter
+    CodeInspection.register('javascript', {
+      name: 'JasmineTests',
+      scanFileAsync: handleLinterAsync
+    });
   });
 });
