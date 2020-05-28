@@ -8,7 +8,8 @@ maxerr: 50, node: true */
   const spawn = require('child_process').spawn;
 
   const cmdRunTests = (params, callback) => {
-    let output = ''; let jasmineNodeChildProcess;
+    let output = '';
+    let jasmineNodeChildProcess;
     const args = [`${__dirname}/jasmine-test.js`, params.file, params.config];
     try {
       console.log('Running wrapper with args', JSON.stringify(args));
@@ -38,7 +39,10 @@ maxerr: 50, node: true */
    */
   function init(domainManager) {
     if (!domainManager.hasDomain('bracketsJasmineTests')) {
-      domainManager.registerDomain('bracketsJasmineTests', {major: 0, minor: 1});
+      domainManager.registerDomain('bracketsJasmineTests', {
+        major: 0,
+        minor: 1
+      });
     }
     domainManager.registerCommand(
         'bracketsJasmineTests', // domain name
@@ -53,11 +57,13 @@ maxerr: 50, node: true */
             description: 'the object with spec file, jasmine.json path, callback'
           }
         ],
-        [{
-          name: 'result',
-          type: 'string',
-          description: 'The result of the execution'
-        }]
+        [
+          {
+            name: 'result',
+            type: 'string',
+            description: 'The result of the execution'
+          }
+        ]
     );
   }
   exports.init = init;

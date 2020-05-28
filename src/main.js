@@ -129,7 +129,7 @@ define(function(require, exports, module) {
     };
 
     try {
-      results = (JSON.parse(rawResult.split('---JASMINERESULT---')[1]));
+      results = JSON.parse(rawResult.split('---JASMINERESULT---')[1]);
     } catch (e) {
       console.error('Failed to parse', rawResult);
       const failureMessage = {
@@ -138,6 +138,7 @@ define(function(require, exports, module) {
         message: 'Extension Failed to parse Jasmine results'
       };
       reportData.errors.push(failureMessage);
+      gutterReportData.errors.push(failureMessage);
 
       return {reportData, gutterReportData};
     }
@@ -203,11 +204,13 @@ define(function(require, exports, module) {
       def.resolve({errors: []});
       return def.promise();
     }
-    console.log(`[JasmineTests] ${isReattemptRun ? 'Reattempting Test' : 'Testing'}...`, filePath);
+    console.log(
+        `[JasmineTests] ${isReattemptRun ? 'Reattempting Test' : 'Testing'}...`,
+        filePath
+    );
 
     const params = {file: filePath, config: configFilePath};
 
-    // StatusBar.showBusyIndicator(false);
     isWorking = true;
     updateStatus();
     bracketsJasmineDomain
@@ -215,7 +218,6 @@ define(function(require, exports, module) {
         .done(function(result) {
           isWorking = false;
           updateStatus();
-          // StatusBar.hideBusyIndicator();
           const {reportData, gutterReportData} = generateReport(
               result,
               filePath,
@@ -251,7 +253,13 @@ define(function(require, exports, module) {
             isWorking = false;
             // StatusBar.hideBusyIndicator();
             updateStatus();
-            def.reject(err);
+            def.resolve({errors: [
+              {
+                pos: {line: 0, ch: 1},
+                type: CodeInspection.Type.WARNING,
+                message: err
+              }
+            ]});
           }
         });
     return def.promise();
@@ -273,6 +281,9 @@ define(function(require, exports, module) {
         '⚪ Running...' :
         '🔵 Enabled' :
       '🔴 Disabled';
+    isWorking ?
+      StatusBar.showBusyIndicator(false) :
+      StatusBar.hideBusyIndicator();
     statusDropDownBtn.$button.text(`Jasmine: ${status}`);
   };
   const resolveConfigFile = (projectPath, triggerInspection) => {
@@ -293,7 +304,6 @@ define(function(require, exports, module) {
         }
     );
   };
-
 
   // register linter
   CodeInspection.register('javascript', {

@@ -2,6 +2,7 @@ const Jasmine = require('jasmine');
 const jasmine = new Jasmine();
 
 const printParseable = (data) => {
+  process.stdout._handle.setBlocking(true);
   process.stdout.write('---JASMINERESULT---');
   process.stdout.write(JSON.stringify(data));
   process.stdout.write('---JASMINERESULT---');
@@ -9,7 +10,9 @@ const printParseable = (data) => {
 };
 
 if (process.argv.length < 3) {
-  printParseable({error: 'expected 2 arguments. [1] spec file, [2] config file'});
+  printParseable({
+    error: 'expected 2 arguments. [1] spec file, [2] config file'
+  });
 }
 
 const params = {
@@ -50,4 +53,3 @@ const execTest = () => {
   jasmine.execute([params.file]);
 };
 execTest();
-
