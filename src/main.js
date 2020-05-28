@@ -9,6 +9,7 @@ define(function(require, exports, module) {
   const StatusBar = brackets.getModule('widgets/StatusBar');
   const DropdownButton = brackets.getModule('widgets/DropdownButton');
 
+  console.log('Code Inspection Object', CodeInspection);
   /**
    * Unique name of this Brackets extension
    * @type {String}
@@ -111,14 +112,27 @@ define(function(require, exports, module) {
   /**
    * Generates CodeInspection ready reports
    *
-   * @param   {Object}  results   results object of the file being linted
+   * @param   {Object}  rawResult   raw string of results from the node process
    * @param   {String}  fileName  fullpath to the file being linted
    * @param   {String}  text      The text being linted
    *
    * @return  {Object<String, Object>}            [return description]
    */
-  const generateReport = (results, fileName, text) => {
+  const generateReport = (rawResult, fileName, text) => {
     lintedCodeLines = text.split('\n');
+    let results;
+    try {
+      results = (JSON.parse(rawResult.split('---JASMINERESULT---')[1]));
+    } catch (e) {
+      console.error('Failed to parse', rawResult);
+      return {
+        errors: [{
+          pos: {line: 0, ch: 1},
+          type: CodeInspection.Type.WARNING,
+          message: 'Jasmine ran, but the extension could not parse the result'
+        }]
+      };
+    }
     const reportData = {
       errors: []
     };
@@ -200,7 +214,7 @@ define(function(require, exports, module) {
           updateStatus();
           // StatusBar.hideBusyIndicator();
           const {reportData, gutterReportData} = generateReport(
-              JSON.parse(result),
+              result,
               filePath,
               text
           );
@@ -216,7 +230,7 @@ define(function(require, exports, module) {
               log.error(`No bracketsInspectionGutters found on window`);
             }
           } catch (e) {
-            console.error(log(e));
+            console.error(e);
           }
           isReattemptRun = false;
           def.resolve(reportData);
@@ -258,7 +272,7 @@ define(function(require, exports, module) {
       '🔴 Disabled';
     statusDropDownBtn.$button.text(`Jasmine: ${status}`);
   };
-  const resolveConfigFile = (projectPath) => {
+  const resolveConfigFile = (projectPath, triggerInspection) => {
     FileSystem.resolve(
         `${projectPath}/spec/support/jasmine.json`,
         (err, file) => {
@@ -268,30 +282,44 @@ define(function(require, exports, module) {
           } else {
             configFilePath = `${projectPath}/spec/support/jasmine.json`;
             hasJasmineConfig = true;
+            if (triggerInspection) {
+              CodeInspection.requestRun();
+            }
             updateStatus();
           }
         }
     );
   };
 
-  AppInit.appReady(function() {
-    // add the Jasmine Tests button to the status bar
-    StatusBar.addIndicator(
-        'jasmineTestsStatus',
-        statusDropDownBtn.$button,
-        true,
-        'btn btn-dropdown btn-status-bar',
-        'Jasmine Tests',
-        'status-overwrite'
-    );
-    updateStatus();
-    ProjectManager.on('projectOpen', handleProjectOpen);
-    ProjectManager.on('projectRefresh', handleProjectOpen);
-    resolveConfigFile(ProjectManager.getProjectRoot().fullPath);
-    // register linter
-    CodeInspection.register('javascript', {
-      name: 'JasmineTests',
-      scanFileAsync: handleLinterAsync
-    });
+
+  // register linter
+  CodeInspection.register('javascript', {
+    name: 'JasmineTests',
+    scanFileAsync: handleLinterAsync
   });
+
+  // add the Jasmine Tests button to the status bar
+  StatusBar.addIndicator(
+      'jasmineTestsStatus',
+      statusDropDownBtn.$button,
+      true,
+      'btn btn-dropdown btn-status-bar',
+      'Jasmine Tests',
+      'status-overwrite'
+  );
+
+  ProjectManager.on('projectOpen', handleProjectOpen);
+  ProjectManager.on('projectRefresh', handleProjectOpen);
+
+  AppInit.appReady(function() {
+    resolveConfigFile(ProjectManager.getProjectRoot().fullPath, true);
+    updateStatus();
+  });
+
+  exports.updateStatus = updateStatus;
+  exports.resolveConfigFile = resolveConfigFile;
+  exports.extractLine = extractLine;
+  exports.generateReport = generateReport;
+  exports.handleLinterAsync = handleLinterAsync;
+  exports.matchesSpecPattern = matchesSpecPattern;
 });
