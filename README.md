@@ -8,6 +8,21 @@ brackets-jasmine-reporter is a extension for [Adobe Brackets](https://brackets.i
 
 ![Brackets Extension Demo](https://github.com/nadchif/brackets-jasmine/raw/master/screenshots/brackets-jasmine-still.png)
 
+## Features
+* Automatically starting Jasmine reporting when a `/spec/support/jasmine.json` is found in the workspace
+* Show results inside the code inspector
+* Shows the errors next to the expect functions.
+* Automatically runs tests on save, if the project workspace includes a `/spec/support/jasmine.json` 
+
+## Installation and Usage
+* Download and install using the brackets extension manager or downloading it from [Brackets Registry](https://registry.brackets.io/)
+* Install [Node.js](https://nodejs.org/en/download/)
+* Install Jasmine globally
+  ```
+  npm install -g jasmine
+  ```
+* Enjoy!
+
 ## License
 [Apache 2.0](https://github.com/nadchif/brackets-jasmine/blob/master/LICENSE)
 
