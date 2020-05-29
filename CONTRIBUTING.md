@@ -1,0 +1,3 @@
+# Contributing 
+
+// TODO: Write guide
