@@ -9,7 +9,7 @@ brackets-jasmine-reporter is a extension for [Adobe Brackets](https://brackets.i
 ![Brackets Extension Demo](https://github.com/nadchif/brackets-jasmine/raw/master/screenshots/brackets-jasmine-scr.gif)
 <details>
   <summary>
-    Click for more screenshots
+    Click here for more screenshots
   </summary>
   
   ![Brackets Extension Demo](https://github.com/nadchif/brackets-jasmine/raw/master/screenshots/brackets-jasmine-still.png)
