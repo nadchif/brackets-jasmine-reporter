@@ -4,43 +4,33 @@ maxerr: 50, node: true */
 
 (function() {
   'use strict';
-  const Jasmine = require('jasmine');
-  const jasmine = new Jasmine();
-  /**
-   * @private
-   * Handler function for the Run Test command
-   * @param {Object<string, string>} params the Jasmine spec file
-   * @param {Function} callback
-   * @return {void} The test resluts
-   */
+
+  const spawn = require('child_process').spawn;
+
   const cmdRunTests = (params, callback) => {
-    const tempRes = {
-      specs: [],
-      suites: [],
-      params
-    };
-    // jasmine.loadConfigFile(params.config);
-    jasmine.addReporter({
-      jasmineStarted: function(suiteInfo) {
-        tempRes['start_info'] = suiteInfo;
-      },
-      specDone: function(result) {
-        tempRes.specs.push(result);
-      },
+    let output = '';
+    let jasmineNodeChildProcess;
+    const args = [`${__dirname}/jasmine-test.js`, params.file, params.config];
+    try {
+      console.log('Running wrapper with args', JSON.stringify(args));
+      jasmineNodeChildProcess = spawn(process.execPath, args);
+    } catch (err) {
+      console.error('Jasmine Wrapper error', err);
+      return callback(err);
+    }
 
-      suiteDone: function(result) {
-        tempRes.suites.push(result);
-      },
+    jasmineNodeChildProcess.stderr.on('data', function(data) {
+      output += data.toString();
+    });
 
-      jasmineDone: function(result) {
-        tempRes['end_info'] = result;
-      }
+    jasmineNodeChildProcess.stdout.on('data', function(data) {
+      output += data.toString();
     });
-    jasmine.randomizeTests(false);
-    jasmine.onComplete(() => {
-      callback(null, JSON.stringify(tempRes));
+
+    jasmineNodeChildProcess.on('exit', function(code, signal) {
+      console.log('Jasmine Wrapper process finished. Code = %s', code);
+      return callback(null, output);
     });
-    jasmine.execute([params.file]);
   };
 
   /**
@@ -49,7 +39,10 @@ maxerr: 50, node: true */
    */
   function init(domainManager) {
     if (!domainManager.hasDomain('bracketsJasmineTests')) {
-      domainManager.registerDomain('bracketsJasmineTests', {major: 0, minor: 1});
+      domainManager.registerDomain('bracketsJasmineTests', {
+        major: 0,
+        minor: 1
+      });
     }
     domainManager.registerCommand(
         'bracketsJasmineTests', // domain name
@@ -64,11 +57,13 @@ maxerr: 50, node: true */
             description: 'the object with spec file, jasmine.json path, callback'
           }
         ],
-        [{
-          name: 'result',
-          type: 'string',
-          description: 'The result of the execution'
-        }]
+        [
+          {
+            name: 'result',
+            type: 'string',
+            description: 'The result of the execution'
+          }
+        ]
     );
   }
   exports.init = init;
