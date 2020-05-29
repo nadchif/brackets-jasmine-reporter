@@ -39,3 +39,4 @@ Contributions and suggestions are very welcome and wanted. I try to respond to p
 
 ## Other possible features
 * Intellisense for Jasmine
+* Coverage reports
