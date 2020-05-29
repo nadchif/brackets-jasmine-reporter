@@ -6,7 +6,15 @@
 brackets-jasmine-reporter is a extension for [Adobe Brackets](https://brackets.io
 ). This extension gives in [Jasmine](https://jasmine.github.io/) test results feedback within the IDE
 
-![Brackets Extension Demo](https://github.com/nadchif/brackets-jasmine/raw/master/screenshots/brackets-jasmine-still.png)
+![Brackets Extension Demo](https://github.com/nadchif/brackets-jasmine/raw/master/screenshots/brackets-jasmine-scr.gif)
+<details>
+  <summary>
+    Click for more screenshots
+  </summary>
+  
+  ![Brackets Extension Demo](https://github.com/nadchif/brackets-jasmine/raw/master/screenshots/brackets-jasmine-still.png)
+  
+</details>
 
 ## Features
 * Automatically starting Jasmine reporting when a `/spec/support/jasmine.json` is found in the workspace
