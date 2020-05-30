@@ -170,6 +170,17 @@ define((require, exports, module) => {
       *     <anything>
       * ---------------------------------
       */
+      if (keyFunctions.includes(hint) && hint != 'expect') {
+        this.editor.document.replaceRange(
+            `${hint}('', () => {})`,
+            start,
+            end
+        );
+        const pos = this.editor.getCursorPos();
+        pos.ch -= 12;
+        this.editor.setCursorPos(pos);
+        return true;
+      }
       this.editor.document.replaceRange(
           hint,
           start,
