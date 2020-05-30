@@ -76,7 +76,7 @@ define((require, exports, module) => {
           /((\w+)(|(\("|\('|\()))$|((expect)(\()(.*)(\))(\.))$ |((expect)(\()(.*)(\))(\.)(.*))$/
       );
 
-      if (!wordBeforeCursor || wordBeforeCursor[0].length < 2) {
+      if (!wordBeforeCursor || wordBeforeCursor[0].length < 1) {
         return [];
       }
 
@@ -165,9 +165,9 @@ define((require, exports, module) => {
         this.editor.setCursorPos(pos);
         return true;
       }
-      /* autocomplete for:
+      /* autocomplete for functions like:
       * ---------------------------------
-      *     <anything>
+      *     describe
       * ---------------------------------
       */
       if (keyFunctions.includes(hint) && hint != 'expect') {
@@ -181,6 +181,23 @@ define((require, exports, module) => {
         this.editor.setCursorPos(pos);
         return true;
       }
+
+      if (hint == 'expect') {
+        this.editor.document.replaceRange(
+            `${hint}()`,
+            start,
+            end
+        );
+        const pos = this.editor.getCursorPos();
+        pos.ch -= 1;
+        this.editor.setCursorPos(pos);
+        return true;
+      }
+      /* autocomplete for:
+      * ---------------------------------
+      *     <anything>
+      * ---------------------------------
+      */
       this.editor.document.replaceRange(
           hint,
           start,
