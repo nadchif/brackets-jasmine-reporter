@@ -9,7 +9,6 @@ define(function(require, exports, module) {
   const StatusBar = brackets.getModule('widgets/StatusBar');
   const DropdownButton = brackets.getModule('widgets/DropdownButton');
 
-  console.log('Code Inspection Object', CodeInspection);
   /**
    * Unique name of this Brackets extension
    * @type {String}
@@ -331,6 +330,7 @@ define(function(require, exports, module) {
 
   AppInit.appReady(function() {
     resolveConfigFile(ProjectManager.getProjectRoot().fullPath, true);
+    require('support/jasmine-hint-provider')();
     updateStatus();
   });
 

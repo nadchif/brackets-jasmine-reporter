@@ -5,12 +5,12 @@
   "description": "Get inline Jasmine Unit test feedback within Brackets IDE",
   "main": "main.js",
   "scripts": {
-    "test": "./node_modules/.bin/eslint ./src/main.js ./src/*  && ./node_modules/.bin/jasmine --random=false",
-    "test-lint": "./node_modules/.bin/eslint --fix ./src/main.js ./src/* ./spec/*.js",
-    "test-jasmine":"./node_modules/.bin/jasmine --random=false",
+    "test": "npm run-script test-lint && npm run-script test-jasmine",
+    "test-lint": "./node_modules/.bin/eslint --fix ./src/main.js ./src/*.js ./spec/*.js",
+    "test-jasmine": "./node_modules/.bin/jasmine --random=false",
     "lintfix": "./node_modules/.bin/eslint --fix ./src/main.js ./src/* ./spec/*.js",
     "zip": "npm run-script build && ./node_modules/.bin/bestzip brackets-jasmine.zip lib/* convertors/* main.js requirejs-config.json package.json",
-    "build": "./node_modules/.bin/eslint ./src/* && ./node_modules/.bin/babel src -d ./dist/",
+    "build": "npm test && npm run-script fastbuild",
     "fastbuild": "./node_modules/.bin/babel src -d ."
   },
   "repository": {

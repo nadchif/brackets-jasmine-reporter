@@ -13,7 +13,9 @@ maxerr: 50, node: true */
     const args = [`${__dirname}/jasmine-test.js`, params.file, params.config];
     try {
       console.log('Running wrapper with args', JSON.stringify(args));
-      jasmineNodeChildProcess = spawn(process.execPath, args);
+      jasmineNodeChildProcess = spawn(process.execPath, args, {
+        windowsHide: true
+      });
     } catch (err) {
       console.error('Jasmine Wrapper error', err);
       return callback(err);
