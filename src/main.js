@@ -107,7 +107,7 @@ define(function(require, exports, module) {
       const feedbackLines = getFeedbackLines(spec, lintedCodeLines, fileName);
       if (spec.status == 'passed') {
         // eslint-disable-next-line no-irregular-whitespace
-        message = `✅‏‏‎  ${spec.fullName}`;
+        message = `✅‏‏‎  [PASS] ${spec.fullName}`;
         reportData.errors.push({
           pos: {line: feedbackLines.lines[0], ch: 1},
           type: CodeInspection.Type.META,
@@ -128,7 +128,7 @@ define(function(require, exports, module) {
             pos: {line: feedbackLines.lines[index], ch: 1},
             type: CodeInspection.Type.META,
             // eslint-disable-next-line no-irregular-whitespace
-            message: `❌  ${spec.fullName} -- ${details}`
+            message: `❌  [FAIL] ${spec.fullName} -- ${details}`
           });
           gutterReportData.errors.push({
             pos: {line: feedbackLines.lines[index], ch: 1},
@@ -137,7 +137,7 @@ define(function(require, exports, module) {
                 CodeInspection.Type.META :
                 CodeInspection.Type.ERROR,
             // eslint-disable-next-line no-irregular-whitespace
-            message: `❌  ${details}`
+            message: `❌  [FAIL] ${details}`
           });
         });
       }
