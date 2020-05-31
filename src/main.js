@@ -198,7 +198,7 @@ define(function(require, exports, module) {
                   true
               );
             } else {
-              log.error(`No bracketsInspectionGutters found on window`);
+              console.error(`No bracketsInspectionGutters found on window`);
             }
           } catch (e) {
             console.error(e);

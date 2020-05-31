@@ -168,7 +168,7 @@ define((require, exports, module) => {
       * ---------------------------------
       */
       if (keyFunctions.includes(hint) && hint != 'expect') {
-        const spaceBeforeContentMatch = lineTextBeforeCursor.match(/^(\s*)/);
+        const spaceBeforeContentMatch = lineTextBeforeCursor.match(/(^\s*)|^(\t)*/);
         const whitespaceBeforeContent = spaceBeforeContentMatch ? spaceBeforeContentMatch[0] : '';
         this.editor.document.replaceRange(
             `${hint}('', () => {\n${whitespaceBeforeContent}\t\n${whitespaceBeforeContent}})`,
