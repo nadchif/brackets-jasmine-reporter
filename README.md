@@ -26,7 +26,12 @@ brackets-jasmine-reporter is a extension for [Adobe Brackets](https://brackets.i
   ![Brackets Extension Auto Complete Demo](https://github.com/nadchif/brackets-jasmine/raw/master/screenshots/brackets-jasmine-autocomplete.gif)
 
 ## Installation and Usage
-* Download and install using the brackets extension manager or downloading it from [Brackets Registry](https://registry.brackets.io/)
+* Download the extension using the brackets extension manager 
+    
+    or 
+    
+* Download it from [Brackets Registry](https://registry.brackets.io/) then install it the zip using the extension manager
+#### Recommeded Also
 * Install [Node.js](https://nodejs.org/en/download/)
 * Install Jasmine globally
   ```
