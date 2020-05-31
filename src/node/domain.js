@@ -1,12 +1,9 @@
 /* jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4,
 maxerr: 50, node: true */
 /* global */
-
 (function() {
   'use strict';
-
   const spawn = require('child_process').spawn;
-
   const cmdRunTests = (params, callback) => {
     let output = '';
     let jasmineNodeChildProcess;
@@ -20,21 +17,17 @@ maxerr: 50, node: true */
       console.error('Jasmine Wrapper error', err);
       return callback(err);
     }
-
     jasmineNodeChildProcess.stderr.on('data', function(data) {
       output += data.toString();
     });
-
     jasmineNodeChildProcess.stdout.on('data', function(data) {
       output += data.toString();
     });
-
     jasmineNodeChildProcess.on('exit', function(code, signal) {
       console.log('Jasmine Wrapper process finished. Code = %s', code);
       return callback(null, output);
     });
   };
-
   /**
    * Initializes the test domain with several test commands.
    * @param {DomainManager} domainManager The DomainManager for the server
