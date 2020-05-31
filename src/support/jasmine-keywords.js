@@ -1,10 +1,8 @@
 /* jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4,
 maxerr: 50, node: true */
 /* global */
-
 define((require, exports, module) => {
   'use strict';
-
   const keywordList = {
     keyFunctions: [
       'describe',
@@ -47,6 +45,5 @@ define((require, exports, module) => {
       'toThrowMatching()'
     ]
   };
-
   module.exports = () => keywordList;
 });

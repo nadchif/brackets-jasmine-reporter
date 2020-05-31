@@ -5,4 +5,5 @@ brackets-jasmine
 brackets-jasmine.zip
 *.bat
 /node
+/support
 /main.js
