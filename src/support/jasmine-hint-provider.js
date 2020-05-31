@@ -1,10 +1,8 @@
 /* jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4,
 maxerr: 50, node: true */
 /* global */
-
 define((require, exports, module) => {
   'use strict';
-
   const CodeHintManager = brackets.getModule('editor/CodeHintManager');
   const LanguageManager = brackets.getModule('language/LanguageManager');
   const {keyFunctions, keyMatchers} = require('./jasmine-keywords')();
@@ -60,7 +58,6 @@ define((require, exports, module) => {
         handleWideResults: false
       };
     }
-
     /**
      * Finds and matches hints to the available keywords
      * @param {String} textBeforeCursor
@@ -70,27 +67,23 @@ define((require, exports, module) => {
       let result;
       // match functions
       const confirmedMatches = [];
-
       const wordBeforeCursor = textBeforeCursor.match(
           // eslint-disable-next-line max-len
-          /((\w+)(|(\("|\('|\()))$|((expect)(\()(.*)(\))(\.))$ |((expect)(\()(.*)(\))(\.)(.*))$/
+          /((\w+)(|(\("|\('|\()))$|((expect)(\()(.*)(\))(\.))$ |((expect)(\()(.*)(\))(\.)(.*))$/i
       );
-
       if (!wordBeforeCursor || wordBeforeCursor[0].length < 1) {
         return [];
       }
-
       keyFunctions.forEach((fnName) => {
         if (fnName.startsWith(wordBeforeCursor[0])) {
           confirmedMatches.push(fnName);
         }
       });
-
       // match matchers
-      if (/((expect)(\()(.*)(\))(\.))$/.test(textBeforeCursor)) {
+      if (/((expect)(\()(.*)(\))(\.))$/i.test(textBeforeCursor)) {
         result = confirmedMatches.concat(keyMatchers);
       } else {
-        if (/((expect)(\()(.*)(\))(\.)(.*))$/.test(textBeforeCursor)) {
+        if (/((expect)(\()(.*)(\))(\.)(.*))$/i.test(textBeforeCursor)) {
           const lastInputChars = wordBeforeCursor[0].match(/\)\.(\w+)/);
           keyMatchers.forEach((matcher) => {
             const startString = `).${matcher}`;
@@ -103,7 +96,6 @@ define((require, exports, module) => {
       }
       return result;
     }
-
     /**
      * Inserts the selected hint
      * @param {String} hint
@@ -115,27 +107,25 @@ define((require, exports, module) => {
       const textBeforeCursor = line.slice(0, cursorPos.ch);
       const wordBeforeCursor = textBeforeCursor
           // eslint-disable-next-line max-len
-          .match(/((\w+)(|(\("|\('|\()))$|((expect)(\()(.*)(\))(\.))$ |((expect)(\()(.*)(\))(\.)(.*))$/
+          .match(/((\w+)(|(\("|\('|\()))$|((expect)(\()(.*)(\))(\.))$ |((expect)(\()(.*)(\))(\.)(.*))$/i
           );
-
-      if (!wordBeforeCursor || wordBeforeCursor[0].length < 2) {
+      if (!wordBeforeCursor || wordBeforeCursor[0].length < 1) {
         return false;
       }
-
       const start = {
         line: cursorPos.line,
         ch: cursorPos.ch - wordBeforeCursor[0].length
       };
       const end = {line: cursorPos.line, ch: cursorPos.ch};
-
       /* autocomplete for:
       * ---------------------------------
       *     expect(<anything>).
       * ---------------------------------
       */
-      if (/((expect)(\()(.*)(\))(\.))$/.test(textBeforeCursor)) {
+      if (/((expect)(\()(.*)(\))(\.))$/i.test(textBeforeCursor)) {
+        const filler = /((expect)(\()(.*)(\))(\.))/i.test(textBeforeCursor)? '' : ').';
         this.editor.document.replaceRange(
-            `${wordBeforeCursor[0]}).${hint}()`,
+            `${wordBeforeCursor[0]}${filler}${hint}()`,
             start,
             end
         );
@@ -149,7 +139,7 @@ define((require, exports, module) => {
       *     expect(<anything>).<anything>
       * ---------------------------------
       */
-      if (/((expect)(\()(.*)(\))(\.)(.*))$/.test(textBeforeCursor)) {
+      if (/((expect)(\()(.*)(\))(\.)(.*))$/i.test(textBeforeCursor)) {
         const lastInputChars = wordBeforeCursor[0].match(/\)\.(\w+)/);
         const targetText = wordBeforeCursor[0].slice(
             0,
@@ -181,7 +171,6 @@ define((require, exports, module) => {
         this.editor.setCursorPos(pos);
         return true;
       }
-
       if (hint == 'expect') {
         this.editor.document.replaceRange(
             `${hint}()`,
@@ -206,7 +195,6 @@ define((require, exports, module) => {
       return true;
     }
   }
-
   module.exports = () => {
     const langIds = ['js', 'ts']
         .map((extension) => {

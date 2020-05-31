@@ -1,3 +1,6 @@
+/* jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4,
+maxerr: 50, node: true */
+/* global */
 define(function(require, exports, module) {
   'use strict';
   const AppInit = brackets.getModule('utils/AppInit');
@@ -8,7 +11,6 @@ define(function(require, exports, module) {
   const ProjectManager = brackets.getModule('project/ProjectManager');
   const StatusBar = brackets.getModule('widgets/StatusBar');
   const DropdownButton = brackets.getModule('widgets/DropdownButton');
-
   /**
    * Unique name of this Brackets extension
    * @type {String}
@@ -24,25 +26,21 @@ define(function(require, exports, module) {
    * @type {String}
    */
   let configFilePath;
-
   /**
    * Array of code lines for the document that was linted
    * @type {Array}
    */
   let lintedCodeLines = [];
-
   /**
    * Indicates that Jasmine tests are currently running
    * @type {Boolean}
    */
   let isWorking = false;
-
   /**
    * Indicates that tests are running as a reattempt resulting from a possible Node failure
    * @type {Boolean}
    */
   let isReattemptRun = false;
-
   /**
    * The Node Domain that we will be using for this extension
    * @type {NodeDomain}
@@ -73,14 +71,16 @@ define(function(require, exports, module) {
         break;
     }
   });
-
   /**
    * Locates the line related to the spec (for error reporting)
    * @param   {Object<String, String>}  spec      the spec result
    * @param   {String}  fileName  the fullpath to the file being linted
    * @return  {Number} the line number
    */
-  const extractLine = (spec, fileName) => {
+  const getFeedbackLines = (spec, fileName) => {
+    const result = {
+      lines: {}
+    };
     if (spec.status == 'passed') {
       const reg =
         'it([ ]{0,1})\\([ ]{0,1}(?:\'|")(' + spec.description + ')(?:\'|")';
@@ -94,28 +94,29 @@ define(function(require, exports, module) {
           break;
         }
       }
-      return lineNo;
+      result.lines[0] = lineNo;
+      return result;
     }
-    const reg = fileName + ':([0-9]+)';
-    const lineMatcher = new RegExp(reg, 'g');
-    const stackString = spec.failedExpectations[0].stack;
-    const fileTroubleLine = stackString.match(lineMatcher);
-    if (fileTroubleLine) {
-      const parts = fileTroubleLine[0].split(':');
-      const line = parseInt(parts[parts.length - 1]) - 1;
-      return line > 0 ? line : 0;
-    }
-    return 0;
+    const reg = ':([0-9]+):([0-9]+)(\\))$';
+    const lineMatcher = new RegExp(reg, 'gm');
+    spec.failedExpectations.forEach((failedExpect, index)=>{
+      const stackString = spec.failedExpectations[index].stack;
+      const fileTroubleLine = stackString.match(lineMatcher);
+      if (fileTroubleLine) {
+        const parts = fileTroubleLine[0].split(':');
+        const line = parseInt(parts[1]) - 1;
+        result.lines[index] = (line > 0 ? line : 0);
+      }
+    });
+    return result;
   };
-
   /**
    * Generates CodeInspection ready reports
    *
    * @param   {Object}  rawResult   raw string of results from the node process
    * @param   {String}  fileName  fullpath to the file being linted
    * @param   {String}  text      The text being linted
-   *
-   * @return  {Object<String, Object>}            [return description]
+   * @return  {Object<String, Object>}  two reports. one for the bottom panel, one for the gutters
    */
   const generateReport = (rawResult, fileName, text) => {
     lintedCodeLines = text.split('\n');
@@ -126,7 +127,6 @@ define(function(require, exports, module) {
     const gutterReportData = {
       errors: []
     };
-
     try {
       results = JSON.parse(rawResult.split('---JASMINERESULT---')[1]);
     } catch (e) {
@@ -138,41 +138,52 @@ define(function(require, exports, module) {
       };
       reportData.errors.push(failureMessage);
       gutterReportData.errors.push(failureMessage);
-
       return {reportData, gutterReportData};
     }
-
     results.specs.forEach((spec) => {
       let message;
+      const feedbackLines = getFeedbackLines(spec, fileName);
       if (spec.status == 'passed') {
         // eslint-disable-next-line no-irregular-whitespace
         message = `✅‏‏‎  ${spec.fullName}`;
+        reportData.errors.push({
+          pos: {line: feedbackLines.lines[0], ch: 1},
+          type: CodeInspection.Type.META,
+          message
+        });
+        gutterReportData.errors.push({
+          pos: {line: feedbackLines.lines[0], ch: 1},
+          type:
+            spec.status == 'passed' ?
+              CodeInspection.Type.META :
+              CodeInspection.Type.ERROR,
+          message
+        });
       } else {
-        const details = spec.failedExpectations[0].message;
-        // eslint-disable-next-line no-irregular-whitespace
-        message = `❌  ${spec.fullName} -- ${details}`;
+        spec.failedExpectations.forEach((failedExpect, index) => {
+          const details = spec.failedExpectations[index].message;
+          // eslint-disable-next-line no-irregular-whitespace
+          message = `❌  ${spec.fullName} -- ${details}`;
+          reportData.errors.push({
+            pos: {line: feedbackLines.lines[index], ch: 1},
+            type: CodeInspection.Type.META,
+            message
+          });
+          gutterReportData.errors.push({
+            pos: {line: feedbackLines.lines[index], ch: 1},
+            type:
+              spec.status == 'passed' ?
+                CodeInspection.Type.META :
+                CodeInspection.Type.ERROR,
+            message
+          });
+        });
       }
-      const lineNo = extractLine(spec, fileName);
-      reportData.errors.push({
-        pos: {line: lineNo, ch: 1},
-        type: CodeInspection.Type.META,
-        message
-      });
-      gutterReportData.errors.push({
-        pos: {line: lineNo, ch: 1},
-        type:
-          spec.status == 'passed' ?
-            CodeInspection.Type.META :
-            CodeInspection.Type.ERROR,
-        message
-      });
     });
     return {reportData, gutterReportData};
   };
-
   /**
    * Handles projects opening and refreshing
-   *
    * @param   {Event}  event          The event
    * @param   {any}  projectRoot  The active project root
    * @return  {void}
@@ -185,13 +196,10 @@ define(function(require, exports, module) {
     // check if the project path contains /spec/support/jasmine.json
     resolveConfigFile(projectRoot.fullPath);
   };
-
   /**
    * Handles scanFileAsync calls to lint the current file
-   *
    * @param   {String}  text      The text of the file going to be linted
    * @param   {String}  filePath  Full filepath of the file going to be linted
-   *
    * @return  {Promise}           a jQuery.Promise
    */
   const handleLinterAsync = (text, filePath) => {
@@ -207,9 +215,7 @@ define(function(require, exports, module) {
         `[JasmineTests] ${isReattemptRun ? 'Reattempting Test' : 'Testing'}...`,
         filePath
     );
-
     const params = {file: filePath, config: configFilePath};
-
     isWorking = true;
     updateStatus();
     bracketsJasmineDomain
@@ -263,7 +269,6 @@ define(function(require, exports, module) {
         });
     return def.promise();
   };
-
   /**
    * Checks if a filename matches the Jasmine spec naming patterns
    * @param   {String}  filename  filepath and name
@@ -273,23 +278,23 @@ define(function(require, exports, module) {
     // @todo load the project config jasmine.json and determine patten match from there
     return filename.toLowerCase().endsWith('spec.js');
   };
-
+  /**
+   * Updates the status bar to reflect the extensions current status: enabled, disabled or running
+   */
   const updateStatus = () => {
     const status = hasJasmineConfig ?
       isWorking ?
         '⚪ Running...' :
         '🔵 Enabled' :
       '🔴 Disabled';
-    /*
-    Hangs PC:
-
-    isWorking ?
-      StatusBar.showBusyIndicator(false) :
-      StatusBar.hideBusyIndicator();
-
-      */
     statusDropDownBtn.$button.text(`Jasmine: ${status}`);
   };
+  /**
+   * Resolves whether the project path includes a /spec/support/jasmine.json
+   * @param   {String}  projectPath        path to Project
+   * @param   {Boolean}  triggerInspection  triggers a CodeInspection run if the path resolves
+   * @return  {void}
+   */
   const resolveConfigFile = (projectPath, triggerInspection) => {
     FileSystem.resolve(
         `${projectPath}/spec/support/jasmine.json`,
@@ -308,13 +313,11 @@ define(function(require, exports, module) {
         }
     );
   };
-
   // register linter
   CodeInspection.register('javascript', {
     name: 'JasmineTests',
     scanFileAsync: handleLinterAsync
   });
-
   // add the Jasmine Tests button to the status bar
   StatusBar.addIndicator(
       'jasmineTestsStatus',
@@ -324,19 +327,17 @@ define(function(require, exports, module) {
       'Jasmine Tests',
       'status-overwrite'
   );
-
   ProjectManager.on('projectOpen', handleProjectOpen);
   ProjectManager.on('projectRefresh', handleProjectOpen);
-
   AppInit.appReady(function() {
     resolveConfigFile(ProjectManager.getProjectRoot().fullPath, true);
     require('support/jasmine-hint-provider')();
     updateStatus();
   });
-
+  // exports for unit test purposes
   exports.updateStatus = updateStatus;
   exports.resolveConfigFile = resolveConfigFile;
-  exports.extractLine = extractLine;
+  exports.extractLine = getFeedbackLines;
   exports.generateReport = generateReport;
   exports.handleLinterAsync = handleLinterAsync;
   exports.matchesSpecPattern = matchesSpecPattern;
