@@ -21,6 +21,7 @@ brackets-jasmine-reporter is a extension for [Adobe Brackets](https://brackets.i
 * Show results inside the code inspector
 * Shows the errors next to the expect functions.
 * Automatically runs tests on save, if the project workspace includes a `/spec/support/jasmine.json` 
+* Jasmine auto-complete suggestions for `*spec.js` named files
 
 ## Installation and Usage
 * Download and install using the brackets extension manager or downloading it from [Brackets Registry](https://registry.brackets.io/)
@@ -38,6 +39,4 @@ brackets-jasmine-reporter is a extension for [Adobe Brackets](https://brackets.i
 Contributions and suggestions are very welcome and wanted. I try to respond to pull requests within 48 hours. For more information see [CONTRIBUTING.md](https://github.com/nadchif/brackets-jasmine/blob/master/CONTRIBUTING.md).
 
 ## Other possible features
-* Intellisense for Jasmine
-* Add snippets
 * Coverage reports

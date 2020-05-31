@@ -4,8 +4,10 @@ maxerr: 50, node: true */
 define((require, exports, module) => {
   'use strict';
   const CodeHintManager = brackets.getModule('editor/CodeHintManager');
+  const DocumentManager = brackets.getModule('document/DocumentManager');
   const LanguageManager = brackets.getModule('language/LanguageManager');
   const {keyFunctions, keyMatchers} = require('./jasmine-keywords')();
+  const {matchesSpecPattern} = require('./jasmine-shared');
   /**
    * Jasmine Hint Provider for brackets
    */
@@ -24,6 +26,10 @@ define((require, exports, module) => {
      */
     hasHints(editor, implicitChar) {
       this.editor = editor;
+      const doc = DocumentManager.getCurrentDocument();
+      if (!doc || !matchesSpecPattern(doc.file.fullPath)) {
+        return null;
+      }
       if (implicitChar == null || !/[a-zA-Z().=>{'"]/.test(implicitChar)) {
         return null;
       }
@@ -75,7 +81,8 @@ define((require, exports, module) => {
         return [];
       }
       keyFunctions.forEach((fnName) => {
-        if (fnName.startsWith(wordBeforeCursor[0])) {
+        if (`${fnName.toLowerCase()}(`
+            .startsWith(wordBeforeCursor[0].toLowerCase())) {
           confirmedMatches.push(fnName);
         }
       });
@@ -86,8 +93,8 @@ define((require, exports, module) => {
         if (/((expect)(\()(.*)(\))(\.)(.*))$/i.test(textBeforeCursor)) {
           const lastInputChars = wordBeforeCursor[0].match(/\)\.(\w+)/);
           keyMatchers.forEach((matcher) => {
-            const startString = `).${matcher}`;
-            if (startString.startsWith(lastInputChars[0])) {
+            const startString = `).${matcher.toLowerCase()}`;
+            if (startString.startsWith(lastInputChars[0].toLowerCase())) {
               confirmedMatches.push(matcher);
             }
           });
@@ -104,8 +111,8 @@ define((require, exports, module) => {
     insertHint(hint) {
       const cursorPos = this.editor.getCursorPos();
       const line = this.editor.document.getLine(cursorPos.line);
-      const textBeforeCursor = line.slice(0, cursorPos.ch);
-      const wordBeforeCursor = textBeforeCursor
+      const lineTextBeforeCursor = line.slice(0, cursorPos.ch);
+      const wordBeforeCursor = lineTextBeforeCursor
           // eslint-disable-next-line max-len
           .match(/((\w+)(|(\("|\('|\()))$|((expect)(\()(.*)(\))(\.))$ |((expect)(\()(.*)(\))(\.)(.*))$/i
           );
@@ -122,8 +129,8 @@ define((require, exports, module) => {
       *     expect(<anything>).
       * ---------------------------------
       */
-      if (/((expect)(\()(.*)(\))(\.))$/i.test(textBeforeCursor)) {
-        const filler = /((expect)(\()(.*)(\))(\.))/i.test(textBeforeCursor)? '' : ').';
+      if (/((expect)(\()(.*)(\))(\.))$/i.test(lineTextBeforeCursor)) {
+        const filler = /((expect)(\()(.*)(\))(\.))/i.test(lineTextBeforeCursor)? '' : ').';
         this.editor.document.replaceRange(
             `${wordBeforeCursor[0]}${filler}${hint}()`,
             start,
@@ -139,7 +146,7 @@ define((require, exports, module) => {
       *     expect(<anything>).<anything>
       * ---------------------------------
       */
-      if (/((expect)(\()(.*)(\))(\.)(.*))$/i.test(textBeforeCursor)) {
+      if (/((expect)(\()(.*)(\))(\.)(.*))$/i.test(lineTextBeforeCursor)) {
         const lastInputChars = wordBeforeCursor[0].match(/\)\.(\w+)/);
         const targetText = wordBeforeCursor[0].slice(
             0,
@@ -161,13 +168,16 @@ define((require, exports, module) => {
       * ---------------------------------
       */
       if (keyFunctions.includes(hint) && hint != 'expect') {
+        const spaceBeforeContentMatch = lineTextBeforeCursor.match(/(^\s*)|^(\t)*/);
+        const whitespaceBeforeContent = spaceBeforeContentMatch ? spaceBeforeContentMatch[0] : '';
         this.editor.document.replaceRange(
-            `${hint}('', () => {})`,
+            `${hint}('', () => {\n${whitespaceBeforeContent}\t\n${whitespaceBeforeContent}})`,
             start,
             end
         );
         const pos = this.editor.getCursorPos();
-        pos.ch -= 12;
+        pos.line -= 2;
+        pos.ch = start.ch + hint.length + 2;
         this.editor.setCursorPos(pos);
         return true;
       }

@@ -9,7 +9,7 @@ maxerr: 50, node: true */
     let jasmineNodeChildProcess;
     const args = [`${__dirname}/jasmine-test.js`, params.file, params.config];
     try {
-      console.log('Running wrapper with args', JSON.stringify(args));
+      console.log('Jasmine Wrapper run:', `${process.execPath}, ${JSON.stringify(args)}`);
       jasmineNodeChildProcess = spawn(process.execPath, args, {
         windowsHide: true
       });
@@ -24,7 +24,7 @@ maxerr: 50, node: true */
       output += data.toString();
     });
     jasmineNodeChildProcess.on('exit', function(code, signal) {
-      console.log('Jasmine Wrapper process finished. Code = %s', code);
+      console.log('Jasmine Wrapper exit. Code = %s', code);
       return callback(null, output);
     });
   };
