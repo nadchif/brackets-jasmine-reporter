@@ -7,6 +7,7 @@ define((require, exports, module) => {
     keyFunctions: [
       'describe',
       'it',
+      'xit',
       'beforeEach',
       'beforeAll',
       'afterEach',

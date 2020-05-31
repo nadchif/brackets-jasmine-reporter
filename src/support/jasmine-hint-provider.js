@@ -4,8 +4,10 @@ maxerr: 50, node: true */
 define((require, exports, module) => {
   'use strict';
   const CodeHintManager = brackets.getModule('editor/CodeHintManager');
+  const DocumentManager = brackets.getModule('document/DocumentManager');
   const LanguageManager = brackets.getModule('language/LanguageManager');
   const {keyFunctions, keyMatchers} = require('./jasmine-keywords')();
+  const {matchesSpecPattern} = require('./jasmine-shared');
   /**
    * Jasmine Hint Provider for brackets
    */
@@ -24,6 +26,10 @@ define((require, exports, module) => {
      */
     hasHints(editor, implicitChar) {
       this.editor = editor;
+      const doc = DocumentManager.getCurrentDocument();
+      if (!doc || !matchesSpecPattern(doc.file.fullPath)) {
+        return null;
+      }
       if (implicitChar == null || !/[a-zA-Z().=>{'"]/.test(implicitChar)) {
         return null;
       }
@@ -75,7 +81,7 @@ define((require, exports, module) => {
         return [];
       }
       keyFunctions.forEach((fnName) => {
-        if (fnName.startsWith(wordBeforeCursor[0])) {
+        if (`${fnName.toLowerCase()}(`.startsWith(wordBeforeCursor[0].toLowerCase())) {
           confirmedMatches.push(fnName);
         }
       });
@@ -86,8 +92,8 @@ define((require, exports, module) => {
         if (/((expect)(\()(.*)(\))(\.)(.*))$/i.test(textBeforeCursor)) {
           const lastInputChars = wordBeforeCursor[0].match(/\)\.(\w+)/);
           keyMatchers.forEach((matcher) => {
-            const startString = `).${matcher}`;
-            if (startString.startsWith(lastInputChars[0])) {
+            const startString = `).${matcher.toLowerCase()}`;
+            if (startString.startsWith(lastInputChars[0].toLowerCase())) {
               confirmedMatches.push(matcher);
             }
           });

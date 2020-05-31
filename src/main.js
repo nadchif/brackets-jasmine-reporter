@@ -11,6 +11,7 @@ define(function(require, exports, module) {
   const ProjectManager = brackets.getModule('project/ProjectManager');
   const StatusBar = brackets.getModule('widgets/StatusBar');
   const DropdownButton = brackets.getModule('widgets/DropdownButton');
+  const {getFeedbackLines, matchesSpecPattern} = require('./support/jasmine-shared');
   /**
    * Unique name of this Brackets extension
    * @type {String}
@@ -72,45 +73,6 @@ define(function(require, exports, module) {
     }
   });
   /**
-   * Locates the line related to the spec (for error reporting)
-   * @param   {Object<String, String>}  spec      the spec result
-   * @param   {String}  fileName  the fullpath to the file being linted
-   * @return  {Number} the line number
-   */
-  const getFeedbackLines = (spec, fileName) => {
-    const result = {
-      lines: {}
-    };
-    if (spec.status == 'passed') {
-      const reg =
-        'it([ ]{0,1})\\([ ]{0,1}(?:\'|")(' + spec.description + ')(?:\'|")';
-      const lineMatcher = new RegExp(reg, 'g');
-      let lineNo = 0;
-      for (let i = 0; i < lintedCodeLines.length; i++) {
-        const stackString = lintedCodeLines[i];
-        const fileTroubleLine = stackString.match(lineMatcher);
-        if (fileTroubleLine) {
-          lineNo = i;
-          break;
-        }
-      }
-      result.lines[0] = lineNo;
-      return result;
-    }
-    const reg = ':([0-9]+):([0-9]+)(\\))$';
-    const lineMatcher = new RegExp(reg, 'gm');
-    spec.failedExpectations.forEach((failedExpect, index)=>{
-      const stackString = spec.failedExpectations[index].stack;
-      const fileTroubleLine = stackString.match(lineMatcher);
-      if (fileTroubleLine) {
-        const parts = fileTroubleLine[0].split(':');
-        const line = parseInt(parts[1]) - 1;
-        result.lines[index] = (line > 0 ? line : 0);
-      }
-    });
-    return result;
-  };
-  /**
    * Generates CodeInspection ready reports
    *
    * @param   {Object}  rawResult   raw string of results from the node process
@@ -142,7 +104,7 @@ define(function(require, exports, module) {
     }
     results.specs.forEach((spec) => {
       let message;
-      const feedbackLines = getFeedbackLines(spec, fileName);
+      const feedbackLines = getFeedbackLines(spec, lintedCodeLines, fileName);
       if (spec.status == 'passed') {
         // eslint-disable-next-line no-irregular-whitespace
         message = `✅‏‏‎  ${spec.fullName}`;
@@ -162,12 +124,11 @@ define(function(require, exports, module) {
       } else {
         spec.failedExpectations.forEach((failedExpect, index) => {
           const details = spec.failedExpectations[index].message;
-          // eslint-disable-next-line no-irregular-whitespace
-          message = `❌  ${spec.fullName} -- ${details}`;
           reportData.errors.push({
             pos: {line: feedbackLines.lines[index], ch: 1},
             type: CodeInspection.Type.META,
-            message
+            // eslint-disable-next-line no-irregular-whitespace
+            message: `❌  ${spec.fullName} -- ${details}`
           });
           gutterReportData.errors.push({
             pos: {line: feedbackLines.lines[index], ch: 1},
@@ -175,7 +136,8 @@ define(function(require, exports, module) {
               spec.status == 'passed' ?
                 CodeInspection.Type.META :
                 CodeInspection.Type.ERROR,
-            message
+            // eslint-disable-next-line no-irregular-whitespace
+            message: `❌  ${details}`
           });
         });
       }
@@ -190,7 +152,6 @@ define(function(require, exports, module) {
    */
   const handleProjectOpen = (event, projectRoot) => {
     // immediately set hasJasmineConfig to false
-    console.log('refreshed', projectRoot.fullPath);
     hasJasmineConfig = false;
     isWorking = false;
     // check if the project path contains /spec/support/jasmine.json
@@ -270,15 +231,6 @@ define(function(require, exports, module) {
     return def.promise();
   };
   /**
-   * Checks if a filename matches the Jasmine spec naming patterns
-   * @param   {String}  filename  filepath and name
-   * @return  {Boolean} true if file pattern matches the spec pattern
-   */
-  const matchesSpecPattern = (filename) => {
-    // @todo load the project config jasmine.json and determine patten match from there
-    return filename.toLowerCase().endsWith('spec.js');
-  };
-  /**
    * Updates the status bar to reflect the extensions current status: enabled, disabled or running
    */
   const updateStatus = () => {
@@ -337,7 +289,7 @@ define(function(require, exports, module) {
   // exports for unit test purposes
   exports.updateStatus = updateStatus;
   exports.resolveConfigFile = resolveConfigFile;
-  exports.extractLine = getFeedbackLines;
+  exports.getFeedbackLines = getFeedbackLines;
   exports.generateReport = generateReport;
   exports.handleLinterAsync = handleLinterAsync;
   exports.matchesSpecPattern = matchesSpecPattern;
