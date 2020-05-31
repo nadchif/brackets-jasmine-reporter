@@ -81,7 +81,8 @@ define((require, exports, module) => {
         return [];
       }
       keyFunctions.forEach((fnName) => {
-        if (`${fnName.toLowerCase()}(`.startsWith(wordBeforeCursor[0].toLowerCase())) {
+        if (`${fnName.toLowerCase()}(`
+            .startsWith(wordBeforeCursor[0].toLowerCase())) {
           confirmedMatches.push(fnName);
         }
       });
@@ -110,8 +111,8 @@ define((require, exports, module) => {
     insertHint(hint) {
       const cursorPos = this.editor.getCursorPos();
       const line = this.editor.document.getLine(cursorPos.line);
-      const textBeforeCursor = line.slice(0, cursorPos.ch);
-      const wordBeforeCursor = textBeforeCursor
+      const lineTextBeforeCursor = line.slice(0, cursorPos.ch);
+      const wordBeforeCursor = lineTextBeforeCursor
           // eslint-disable-next-line max-len
           .match(/((\w+)(|(\("|\('|\()))$|((expect)(\()(.*)(\))(\.))$ |((expect)(\()(.*)(\))(\.)(.*))$/i
           );
@@ -128,8 +129,8 @@ define((require, exports, module) => {
       *     expect(<anything>).
       * ---------------------------------
       */
-      if (/((expect)(\()(.*)(\))(\.))$/i.test(textBeforeCursor)) {
-        const filler = /((expect)(\()(.*)(\))(\.))/i.test(textBeforeCursor)? '' : ').';
+      if (/((expect)(\()(.*)(\))(\.))$/i.test(lineTextBeforeCursor)) {
+        const filler = /((expect)(\()(.*)(\))(\.))/i.test(lineTextBeforeCursor)? '' : ').';
         this.editor.document.replaceRange(
             `${wordBeforeCursor[0]}${filler}${hint}()`,
             start,
@@ -145,7 +146,7 @@ define((require, exports, module) => {
       *     expect(<anything>).<anything>
       * ---------------------------------
       */
-      if (/((expect)(\()(.*)(\))(\.)(.*))$/i.test(textBeforeCursor)) {
+      if (/((expect)(\()(.*)(\))(\.)(.*))$/i.test(lineTextBeforeCursor)) {
         const lastInputChars = wordBeforeCursor[0].match(/\)\.(\w+)/);
         const targetText = wordBeforeCursor[0].slice(
             0,
@@ -167,13 +168,16 @@ define((require, exports, module) => {
       * ---------------------------------
       */
       if (keyFunctions.includes(hint) && hint != 'expect') {
+        const spaceBeforeContentMatch = lineTextBeforeCursor.match(/^(\s*)/);
+        const whitespaceBeforeContent = spaceBeforeContentMatch ? spaceBeforeContentMatch[0] : '';
         this.editor.document.replaceRange(
-            `${hint}('', () => {})`,
+            `${hint}('', () => {\n${whitespaceBeforeContent}\t\n${whitespaceBeforeContent}})`,
             start,
             end
         );
         const pos = this.editor.getCursorPos();
-        pos.ch -= 12;
+        pos.line -= 2;
+        pos.ch = start.ch + hint.length + 2;
         this.editor.setCursorPos(pos);
         return true;
       }
