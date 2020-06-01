@@ -3,18 +3,15 @@ maxerr: 50, node: true */
 /* global */
 define((require, exports, module) => {
   'use strict';
-
   /**
    * Locates the line related to the spec (for error reporting)
    * @param   {Object<String, String>}  spec      the spec result
    * @param   {Array} lintedCodeLines an array of lines of code for the current doc
    * @param   {String}  fileName  the fullpath to the file being linted
-   * @return  {Number} the line number
+   * @return  {Object<Number, Number>} object that pairs (expectation: line of feedback)
    */
   const getFeedbackLines = (spec, lintedCodeLines, fileName) => {
-    const result = {
-      lines: {}
-    };
+    const result = {};
     if (spec.status == 'passed') {
       const reg =
         'it([ ]{0,1})\\([ ]{0,1}(?:\'|")(' + spec.description + ')(?:\'|")';
@@ -28,7 +25,7 @@ define((require, exports, module) => {
           break;
         }
       }
-      result.lines[0] = lineNo;
+      result[0] = lineNo;
       return result;
     }
     const reg = ':([0-9]+):([0-9]+)(\\))$';
@@ -39,7 +36,7 @@ define((require, exports, module) => {
       if (fileTroubleLine) {
         const parts = fileTroubleLine[0].split(':');
         const line = parseInt(parts[1]) - 1;
-        result.lines[index] = (line > 0 ? line : 0);
+        result[index] = (line > 0 ? line : 0);
       }
     });
     return result;

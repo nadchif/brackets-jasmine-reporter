@@ -96,7 +96,7 @@ define(function(require, exports, module) {
       const failureMessage = {
         pos: {line: 0, ch: 1},
         type: CodeInspection.Type.WARNING,
-        message: 'Extension Failed to parse Jasmine results'
+        message: `Jasmine Wrapper error - ${rawResult}`
       };
       reportData.errors.push(failureMessage);
       gutterReportData.errors.push(failureMessage);
@@ -109,12 +109,12 @@ define(function(require, exports, module) {
         // eslint-disable-next-line no-irregular-whitespace
         message = `✅‏‏‎  [PASS] ${spec.fullName}`;
         reportData.errors.push({
-          pos: {line: feedbackLines.lines[0], ch: 1},
+          pos: {line: feedbackLines[0], ch: 1},
           type: CodeInspection.Type.META,
           message
         });
         gutterReportData.errors.push({
-          pos: {line: feedbackLines.lines[0], ch: 1},
+          pos: {line: feedbackLines[0], ch: 1},
           type:
             spec.status == 'passed' ?
               CodeInspection.Type.META :
@@ -125,13 +125,13 @@ define(function(require, exports, module) {
         spec.failedExpectations.forEach((failedExpect, index) => {
           const details = spec.failedExpectations[index].message;
           reportData.errors.push({
-            pos: {line: feedbackLines.lines[index], ch: 1},
+            pos: {line: feedbackLines[index], ch: 1},
             type: CodeInspection.Type.META,
             // eslint-disable-next-line no-irregular-whitespace
             message: `❌  [FAIL] ${spec.fullName} -- ${details}`
           });
           gutterReportData.errors.push({
-            pos: {line: feedbackLines.lines[index], ch: 1},
+            pos: {line: feedbackLines[index], ch: 1},
             type:
               spec.status == 'passed' ?
                 CodeInspection.Type.META :
@@ -289,8 +289,6 @@ define(function(require, exports, module) {
   // exports for unit test purposes
   exports.updateStatus = updateStatus;
   exports.resolveConfigFile = resolveConfigFile;
-  exports.getFeedbackLines = getFeedbackLines;
   exports.generateReport = generateReport;
   exports.handleLinterAsync = handleLinterAsync;
-  exports.matchesSpecPattern = matchesSpecPattern;
 });

@@ -4,10 +4,10 @@ maxerr: 50, node: true */
 (function() {
   'use strict';
   const spawn = require('child_process').spawn;
-  const cmdRunTests = (params, callback) => {
+  const spawnTests = (params, callback) => {
     let output = '';
     let jasmineNodeChildProcess;
-    const args = [`${__dirname}/jasmine-test.js`, params.file, params.config];
+    const args = [`${__dirname}/jasmine-exec.js`, params.file, params.config];
     try {
       console.log('Jasmine Wrapper run:', `${process.execPath}, ${JSON.stringify(args)}`);
       jasmineNodeChildProcess = spawn(process.execPath, args, {
@@ -41,9 +41,9 @@ maxerr: 50, node: true */
     }
     domainManager.registerCommand(
         'bracketsJasmineTests', // domain name
-        'runTests', // command name
-        cmdRunTests, // command handler function
-        true, // this command is synchronous in Node
+        'runTests', // command name (to be called by other brackets scripts)
+        spawnTests, // command handler (will spawn a node process that runs tests)
+        true, // true because this task will be async
         'Returns the test results from Jasmine',
         [
           {

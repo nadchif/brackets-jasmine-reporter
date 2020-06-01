@@ -1,27 +1,46 @@
 const fs = require('fs');
+// files required in the /src folder
+const srcFiles = [
+  'main.js',
+  'node',
+  'support'
+];
+// files required in the /src/support folder
+const supportFiles = [
+  'jasmine-hint-provider.js',
+  'jasmine-keywords.js',
+  'jasmine-shared.js'
+];
+// files required in the /src/node folder
+const nodeFiles = [
+  'package.json',
+  'domain.js',
+  'jasmine-exec.js'
+];
 
 const srcFolder = fs.readdirSync(`${__dirname}/../src`);
-
 describe('Project Structure =>', () => {
-  describe('src folder =>', () => {
-    it('should contain a main.js file', () => {
-      expect(srcFolder).toContain('main.js');
-    });
-    it('should contain a node folder', () => {
-      expect(srcFolder).toContain('node');
+  describe('/src folder =>', () => {
+    srcFiles.forEach((file) => {
+      it(`should contain a ${file} file/folder`, () => {
+        expect(srcFolder).toContain(file);
+      });
     });
   });
-
+  const srcSupportFolder = fs.readdirSync(`${__dirname}/../src/support`);
+  describe('/src/support folder =>', () => {
+    supportFiles.forEach((file) => {
+      it(`should contain a ${file} file/folder`, () => {
+        expect(srcSupportFolder).toContain(file);
+      });
+    });
+  });
   const srcNodeFolder = fs.readdirSync(`${__dirname}/../src/node`);
-  describe('src/node folder =>', () => {
-    it('should contain a package.json file', () => {
-      expect(srcNodeFolder).toContain('package.json');
-    });
-    it('should contain a domain.js file', () => {
-      expect(srcNodeFolder).toContain('domain.js');
-    });
-    it('should contain a jasmine-test.js file', () => {
-      expect(srcNodeFolder).toContain('jasmine-test.js');
+  describe('/src/node folder =>', () => {
+    nodeFiles.forEach((file) => {
+      it(`should contain a ${file} file/folder`, () => {
+        expect(srcNodeFolder).toContain(file);
+      });
     });
   });
 });

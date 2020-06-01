@@ -42,9 +42,9 @@ define((require, exports, module) => {
       return this.matchHints(textBeforeCursor).length > 0;
     }
     /**
-     * [description]
+     * Method that provides hints back to the IDE
      * @param {String} implicitChar - contains just the last character inserted into the editor's document and the request for hints is implicit
-     * @return {Object}
+     * @return {Array<String>} The hints
      */
     getHints(implicitChar) {
       if (implicitChar == null || !/[a-zA-Z().=>{'"]/.test(implicitChar)) {
@@ -67,7 +67,7 @@ define((require, exports, module) => {
     /**
      * Finds and matches hints to the available keywords
      * @param {String} textBeforeCursor
-     * @return {Array}
+     * @return {Array<String>}
      */
     matchHints(textBeforeCursor) {
       let result;
@@ -113,7 +113,7 @@ define((require, exports, module) => {
       const line = this.editor.document.getLine(cursorPos.line);
       const lineTextBeforeCursor = line.slice(0, cursorPos.ch);
       const wordBeforeCursor = lineTextBeforeCursor
-          // eslint-disable-next-line max-len
+      // eslint-disable-next-line max-len
           .match(/((\w+)(|(\("|\('|\()))$|((expect)(\()(.*)(\))(\.))$ |((expect)(\()(.*)(\))(\.)(.*))$/i
           );
       if (!wordBeforeCursor || wordBeforeCursor[0].length < 1) {
@@ -130,7 +130,7 @@ define((require, exports, module) => {
       * ---------------------------------
       */
       if (/((expect)(\()(.*)(\))(\.))$/i.test(lineTextBeforeCursor)) {
-        const filler = /((expect)(\()(.*)(\))(\.))/i.test(lineTextBeforeCursor)? '' : ').';
+        const filler = /((expect)(\()(.*)(\))(\.))/i.test(lineTextBeforeCursor) ? '' : ').';
         this.editor.document.replaceRange(
             `${wordBeforeCursor[0]}${filler}${hint}()`,
             start,
@@ -168,10 +168,12 @@ define((require, exports, module) => {
       * ---------------------------------
       */
       if (keyFunctions.includes(hint) && hint != 'expect') {
-        const spaceBeforeContentMatch = lineTextBeforeCursor.match(/(^\s*)|^(\t)*/);
-        const whitespaceBeforeContent = spaceBeforeContentMatch ? spaceBeforeContentMatch[0] : '';
+        const spaceBeforeMatch = lineTextBeforeCursor.match(/(^\s*)|^(\t)*/);
+        const spaceBeforeContent = spaceBeforeMatch ? spaceBeforeMatch[0] : '';
+        const replacement =
+        `${hint}('', () => {\n${spaceBeforeContent}\t\n${spaceBeforeContent}})`;
         this.editor.document.replaceRange(
-            `${hint}('', () => {\n${whitespaceBeforeContent}\t\n${whitespaceBeforeContent}})`,
+            replacement,
             start,
             end
         );
