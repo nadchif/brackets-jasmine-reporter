@@ -1,5 +1,10 @@
+/**
+ * Wrapper to execute and output the jasmine tests
+ */
+
 const Jasmine = require('jasmine');
 const jasmine = new Jasmine();
+
 /**
  * Prints out a JSON string of the data that can be parsed by decoding string between '---JASMINERESULT---'
  * @param   {any}  data  any type of data
@@ -7,26 +12,17 @@ const jasmine = new Jasmine();
  */
 const printParseable = (data) => {
   process.stdout._handle.setBlocking(true);
-  process.stdout.write('---JASMINERESULT---');
+  process.stdout.write(' ---JASMINERESULT---');
   process.stdout.write(JSON.stringify(data));
-  process.stdout.write('---JASMINERESULT---');
+  process.stdout.write('---JASMINERESULT--- ');
   process.exit(0);
-};
-// check if the arguments spec file and config file have been provided
-if (process.argv.length < 3) {
-  printParseable({
-    error: 'expected 2 arguments. [1] spec file, [2] config file'
-  });
-}
-// parameters
-const params = {
-  file: process.argv[2],
-  config: process.argv[3]
 };
 /**
  * executes the Jasmine test
+ * @param {String} specFile full file path to the spec file to be tested
+ * @param {String} configFile full file path to the jasmine config file
  */
-const execTest = () => {
+const execTest = (specFile, configFile) => {
   /**
    * The object that contains the results from the Jasmine Reporter
    * @type {Object<string, any>}
@@ -34,7 +30,10 @@ const execTest = () => {
   const report = {
     specs: [],
     suites: [],
-    params
+    params: {
+      specFile,
+      configFile
+    }
   };
   // jasmine.loadConfigFile(params.config);
   jasmine.addReporter({
@@ -58,6 +57,15 @@ const execTest = () => {
   jasmine.onComplete(() => {
     printParseable(report);
   });
-  jasmine.execute([params.file]);
+  jasmine.execute([specFile]);
 };
-execTest();
+
+// check if the arguments spec file and config file have been provided
+if (process.argv.length < 3) {
+  printParseable({
+    error: 'expected 2 arguments. [1] spec file, [2] config file'
+  });
+};
+
+// execute the tests
+execTest(process.argv[2], process.argv[3]);
