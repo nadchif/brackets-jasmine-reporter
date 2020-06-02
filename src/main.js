@@ -11,7 +11,12 @@ define(function(require, exports, module) {
   const ProjectManager = brackets.getModule('project/ProjectManager');
   const StatusBar = brackets.getModule('widgets/StatusBar');
   const DropdownButton = brackets.getModule('widgets/DropdownButton');
+  const CodeHintManager = brackets.getModule('editor/CodeHintManager');
+  const LanguageManager = brackets.getModule('language/LanguageManager');
+
   const {getFeedbackLines, matchesSpecPattern} = require('./support/jasmine-shared');
+  const {JasmineHintProvider} = require('./support/jasmine-hint-provider');
+
   /**
    * Unique name of this Brackets extension
    * @type {String}
@@ -107,7 +112,7 @@ define(function(require, exports, module) {
       const feedbackLines = getFeedbackLines(spec, lintedCodeLines, fileName);
       if (spec.status == 'passed') {
         // eslint-disable-next-line no-irregular-whitespace
-        message = `✅‏‏‎  [PASS] ${spec.fullName}`;
+        message = `✅‏‏‎ [PASS] ${spec.fullName}`;
         reportData.errors.push({
           pos: {line: feedbackLines[0], ch: 1},
           type: CodeInspection.Type.META,
@@ -128,7 +133,7 @@ define(function(require, exports, module) {
             pos: {line: feedbackLines[index], ch: 1},
             type: CodeInspection.Type.META,
             // eslint-disable-next-line no-irregular-whitespace
-            message: `❌  [FAIL] ${spec.fullName} -- ${details}`
+            message: `❌ [FAIL] ${spec.fullName} -- ${details}`
           });
           gutterReportData.errors.push({
             pos: {line: feedbackLines[index], ch: 1},
@@ -137,7 +142,7 @@ define(function(require, exports, module) {
                 CodeInspection.Type.META :
                 CodeInspection.Type.ERROR,
             // eslint-disable-next-line no-irregular-whitespace
-            message: `❌  [FAIL] ${details}`
+            message: `❌ [FAIL] ${details}`
           });
         });
       }
@@ -249,7 +254,7 @@ define(function(require, exports, module) {
    */
   const resolveConfigFile = (projectPath, triggerInspection) => {
     FileSystem.resolve(
-        `${projectPath}/spec/support/jasmine.json`,
+        `${projectPath}spec/support/jasmine.json`,
         (err, file) => {
           if (err) {
             hasJasmineConfig = false;
@@ -281,9 +286,18 @@ define(function(require, exports, module) {
   );
   ProjectManager.on('projectOpen', handleProjectOpen);
   ProjectManager.on('projectRefresh', handleProjectOpen);
+
   AppInit.appReady(function() {
     resolveConfigFile(ProjectManager.getProjectRoot().fullPath, true);
-    require('support/jasmine-hint-provider')();
+
+    const langIds = ['js', 'ts']
+        .map((extension) => {
+          const language = LanguageManager.getLanguageForExtension(extension);
+          return language ? language.getId() : null;
+        })
+        .filter((x) => x != null);
+    CodeHintManager.registerHintProvider(new JasmineHintProvider(), langIds, 1);
+
     updateStatus();
   });
   // exports for unit test purposes
@@ -291,4 +305,5 @@ define(function(require, exports, module) {
   exports.resolveConfigFile = resolveConfigFile;
   exports.generateReport = generateReport;
   exports.handleLinterAsync = handleLinterAsync;
+  exports.hasJasmineConfig = hasJasmineConfig;
 });

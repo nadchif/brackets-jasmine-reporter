@@ -3,9 +3,7 @@ maxerr: 50, node: true */
 /* global */
 define((require, exports, module) => {
   'use strict';
-  const CodeHintManager = brackets.getModule('editor/CodeHintManager');
   const DocumentManager = brackets.getModule('document/DocumentManager');
-  const LanguageManager = brackets.getModule('language/LanguageManager');
   const {keyFunctions, keyMatchers} = require('./jasmine-keywords')();
   const {matchesSpecPattern} = require('./jasmine-shared');
   /**
@@ -44,7 +42,7 @@ define((require, exports, module) => {
     /**
      * Method that provides hints back to the IDE
      * @param {String} implicitChar - contains just the last character inserted into the editor's document and the request for hints is implicit
-     * @return {Array<String>} The hints
+     * @return {Object} The hints
      */
     getHints(implicitChar) {
       if (implicitChar == null || !/[a-zA-Z().=>{'"]/.test(implicitChar)) {
@@ -207,13 +205,5 @@ define((require, exports, module) => {
       return true;
     }
   }
-  module.exports = () => {
-    const langIds = ['js', 'ts']
-        .map((extension) => {
-          const language = LanguageManager.getLanguageForExtension(extension);
-          return language ? language.getId() : null;
-        })
-        .filter((x) => x != null);
-    CodeHintManager.registerHintProvider(new JasmineHintProvider(), langIds, 1);
-  };
+  module.exports = {JasmineHintProvider};
 });

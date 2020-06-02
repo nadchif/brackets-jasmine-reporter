@@ -7,7 +7,7 @@
   "scripts": {
     "test": "npm run-script test-lint && npm run-script test-jasmine",
     "test-lint": "./node_modules/.bin/eslint --fix ./src/main.js ./src/*.js ./spec/*.js",
-    "test-jasmine": "./node_modules/.bin/jasmine --random=false",
+    "test-jasmine": "./node_modules/.bin/jasmine",
     "lintfix": "./node_modules/.bin/eslint --fix ./src/main.js ./src/* ./spec/*.js",
     "zip": "npm run-script build && npm run-script compress",
     "compress": "./node_modules/.bin/bestzip brackets-jasmine.zip support/*.js node/*.js node/*.json main.js requirejs-config.json package.json",
@@ -41,7 +41,8 @@
     "amd-loader": "0.0.8",
     "bestzip": "^2.1.5",
     "eslint": "^7.1.0",
-    "eslint-config-google": "^0.14.0"
+    "eslint-config-google": "^0.14.0",
+    "jquery": "^3.5.1"
   },
   "dependencies": {
     "jasmine": "^3.5.0"
