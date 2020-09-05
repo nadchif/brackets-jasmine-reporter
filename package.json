@@ -39,7 +39,7 @@
     "@babel/core": "^7.9.6",
     "@babel/preset-env": "^7.9.6",
     "amd-loader": "0.0.8",
-    "bestzip": "^2.1.5",
+    "bestzip": "^2.1.7",
     "eslint": "^7.1.0",
     "eslint-config-google": "^0.14.0",
     "jquery": "^3.5.1"
